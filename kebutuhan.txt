@@ -1,0 +1,718 @@
+=========================================
+== UI STANDARDIZATION & DESIGN GUIDELINES ==
+=========================================
+1. KOMPONEN TABEL UTAMA (DataTable)
+   - Gunakan komponen @/Components/DataTable.vue untuk semua halaman master/list data.
+   - Tabel WAJIB memiliki: Pencarian (Search), Filter Limit (Page per view: 10, 25, 50, 100).
+   - Tampilan Tabel harus 'expandable' jika memiliki relasi one-to-many (contoh: Kategori Biaya -> Item Biaya) dengan background child table yang sedikit diredupkan (bg-gray-50).
+   - Kolom nomor dan aksi selalu tetap, dengan ukuran yang proporsional.
+
+2. TOMBOL AKSI PADA BARIS (Row Actions)
+   - Desktop & Mobile: Gunakan Dropdown component dengan trigger titik tiga (vertical dots) jika aksi lebih dari 2.
+   - Isi Dropdown Actions wajib mencakup ikon di sebelah teks (Edit dengan icon pen/pencil text-amber-500, Hapus dengan icon trash text-rose-500, Aktifkan/Nonaktifkan).
+
+3. CHECKBOX LOGIC
+   - Jika tabel mendukung Bulk Action, gunakan head checkbox untuk 'Select All' pada page/data yang difilter.
+   - Munculkan Floating Bar / Bulk Action button di atas tabel jika ada baris yang dipilih.
+
+4. MODAL
+   - Gunakan komponen @/Components/Modal.vue.
+   - Ukuran:
+     - maxWidth='md' untuk formulir tambah/edit standar (1-4 input).
+     - maxWidth='lg' atau maxWidth='2xl' untuk formulir yang kompleks/banyak input.
+     - maxWidth='sm' khusus untuk Konfirmasi Hapus (Delete Confirmation).
+   - Modal Konfirmasi Hapus WAJIB memiliki icon peringatan besar di tengah (warna merah/rose) dengan teks 'Apakah Anda yakin ingin menghapus data ini?'.
+   - Modal Form wajib memiliki header dengan title di sebelah kiri dan tombol close (X) di sebelah kanan. Tombol aksi (Batal & Simpan) selalu berada di bagian bawah dengan border-top.
+
+5. FILTER & PENCARIAN (Search)
+   - Pencarian bersifat dinamis/real-time (typing debounce atau enter).
+   - Jika ada filter kompleks (Status, Gelombang, Rentang Tanggal), letakkan dalam Dropdown atau Modal Filter khusus di sebelah input pencarian.
+
+6. DESAIN UMUM (Modern, Simpel, Elegan, Mahal)
+   - Card/Container: Gunakan ounded-[2rem] atau ounded-2xl tanpa border hitam pekat (gunakan order border-gray-100 dan shadow-sm/shadow-xl yang soft).
+   - Warna Utama (Primary): Konsisten di seluruh tombol utama. Tombol PrimaryButton bersudut bulat penuh (ounded-full) dengan efek hover shadow berwarna (shadow-primary/30).
+   - Input Form: Menggunakan rounded-xl dengan ring color primary ketika focus.
+   - Notifikasi: Toast notification muncul di pojok kanan atas layar menggunakan komponen Toast bawaan layout, hindari desain alert box kaku di dalam page.
+   - Animasi: Tambahkan transisi halus (	ransition-all duration-300) pada hover tombol, row tabel, dan tab menu.
+
+=========================================
+Staf
+foto
+name
+gender (Laki-laki, Perempuan, Tidak Mencantumkan)
+tempat lahir
+tanggal lahir
+nip
+nik
+no_kk
+no_akta_lahir
+no hp/wa
+email
+Alamat Lengkap
+RT
+RW
+Kode Pos
+Provinsi (Ambil dari database LARAVOLT INDONESIA)
+Kabupaten/Kota (Ambil dari database LARAVOLT INDONESIA)
+Kecamatan (Ambil dari database LARAVOLT INDONESIA)
+Kelurahan/Desa (Ambil dari database LARAVOLT INDONESIA)
+
+
+
+PENDAFTAR PPDB
+Step 1: Data Personal
+Cabang Pendaftaran (Kalimantan Barat - Kalbar, Kalimantan Selatan - Kalsel))
+Foto Profil
+No. KK
+NIK
+Nama Lengkap
+Jenis Kelamin (Laki-Laki, Perempuan) 
+Ukuran Baju (Ambil Dari Database)
+Tempat Lahir
+Tanggal Lahir
+Hobi
+Cita-cita
+Jumlah Saudara
+Anak Ke
+Jumalh Saudara di Dalwa
+No. HP/Wa
+Email
+
++ Data yang wajib di isi: dabang pendaftaran, no. kk, nik, nama, jenis kelamin, tempat lahir, tanggal lahir
+
+Step 2: Data Orang Tua
+Nama Ayah
+Status Ayah (Meninggal, Hidup)
+NIK Ayah
+Email Ayah
+No. HP/WhatsApp Ayah
+Tempat Lahir
+Tanggal Lahir
+Pendidikan Terakhir (Ambil Dari Database)
+Pekerjaan (Ambil Dari Database, suport pekerjaan lainnya dan di input oleh pendaftar)
+Penghasilan (Ambil Dari Database)
+Nama Ibu
+Status Ibu (Meninggal, Hidup)
+NIK Ibu
+Email Ibu
+No. HP/WhatsApp Ibu
+Tempat Lahir
+Tanggal Lahir
+Pendidikan Terakhir (Ambil Dari Database)
+Pekerjaan (Ambil Dari Database, suport pekerjaan lainnya dan di input oleh pendaftar)
+Penghasilan (Ambil Dari Database)
+Nama Wali
+NIK Wali
+Email Wali
+No. HP/WhatsApp Wali
+Tempat Lahir
+Tanggal Lahir
+Pendidikan Terakhir (Ambil Dari Database)
+Pekerjaan (Ambil Dari Database, suport pekerjaan lainnya dan di input oleh pendaftar)
+Penghasilan (Ambil Dari Database)
+
+Untuk orang tua: 
++ Jika status meninggal yang wajib: nama status
++ Jika masih hidup maka yang wajib: nama, status, nik, email , nomor hp/wa
++ Jika kedua orang tua telah meninggal dunia, barulah Anda diwajibkan untuk mengisi Data Wali
++ Data wali bersifat opsional selama salah satu orang tua masih hidup
+
+Step 3: Alamat
+Alamat Lengkap
+RT
+RW
+Kode Pos
+Provinsi (Ambil dari database LARAVOLT INDONESIA)
+Kabupaten/Kota (Ambil dari database LARAVOLT INDONESIA)
+Kecamatan (Ambil dari database LARAVOLT INDONESIA)
+Kelurahan/Desa (Ambil dari database LARAVOLT INDONESIA)
+Negara (default Indonesia)
+
++ Data yang wajib di isi: alamat lengkap, rt, rw, provinsi, kabupaten/kota, kecamatan, kelurahan/desa, negara
++ data provinsi, kabupaten, kecamatan, keluarahan, dan desa datanya dari LARAVOLT INDONESIA
+ 
+Step 4: Pendidikan
+Jenis Pendaftaran (Pindahan / Reguler) (wajib di isi)
+Jenjang (MTs, MA, S1, S2, S3) (wajib di isi)
+
+Jika Jenjang dipilih MTs:
+Kelas/Tingkat (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka dia bisa memilih tingkatnya sendiri
+Pendidikan Sebelumnya: 
+Nama Sekolah/Madrasah (wajib di isi)
+NISN (wajib di isi)
+Tipe (Wajib di isi) (Ambil dari database)
+Jenjang (Wajib di isi) (Ambil dari database)
++ Tipe isinya Umum dan Pondok Pesantren
++ Jenajng (umum : SD, SMP, SMA)(pondok pesantren: Madrasah Ibtidaiyah, Madrasah Tsanawiyah, Madrasah Aliyah)
+Tingkat Sebelumnya (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka jenjang nya sama dengan Kelas/Tingkat yang dipilih saat pendaftaran
+NISN (wajib di isi)
+NPSN
+NSM
+Alamat Sekolah
+
+Jika Jenjang dipilih MA:
+Kelas/Tingkat (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka dia bisa memilih tingkatnya sendiri
+Jurusan (Ambil dari database sesuai jenjang)(wajib di isi)
+Pendidikan Sebelumnya: 
+Nama Sekolah/Madrasah (wajib di isi)
+NISN (wajib di isi)
+Tipe (Wajib di isi) (Ambil dari database)
+Jenjang (Wajib di isi) (Ambil dari database)
++ Tipe isinya Umum dan Pondok Pesantren
++ Jenajng (umum : SD, SMP, SMA)(pondok pesantren: Madrasah Ibtidaiyah, Madrasah Tsanawiyah, Madrasah Aliyah)
+Tingkat Sebelumnya (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka jenjang nya sama dengan Kelas/Tingkat yang dipilih saat pendaftaran
+NISN (wajib di isi)
+NPSN
+NSM
+Alamat Sekolah
+
+Jika Jenjang dipilih S1 (Sarjana):
+Fakultas Pilihan Utama (Wajib di isi) (Ambil dari database)
+Prodi Pilihan Utama (Wajib di isi) (Ambil dari database)
+Fakultas (Alternatif 1) (Ambil dari database)
+Prodi (Alternatif 1) (Ambil dari database)
+Fakultas (Alternatif 2) (Ambil dari database)
+Prodi (Alternatif 2) (Ambil dari database)
+Pendidikan Sebelumnya: 
+Nama Sekolah/Madrasah (wajib di isi)
+NISN (wajib di isi)
+Tipe (Wajib di isi) (Ambil dari database)
+Jenjang (Wajib di isi) (Ambil dari database)
++ Tipe isinya Umum dan Pondok Pesantren
++ Jenajng (umum : SD, SMP, SMA)(pondok pesantren: Madrasah Ibtidaiyah, Madrasah Tsanawiyah, Madrasah Aliyah)
+Tingkat Sebelumnya (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka jenjang nya sama dengan Kelas/Tingkat yang dipilih saat pendaftaran
+NISN (wajib di isi)
+NPSN
+NSM
+Alamat Sekolah
+
+Jika Jenjang dipilih S2 (Magister):
+Fakultas Pilihan Utama (Wajib di isi) (Ambil dari database)
+Prodi Pilihan Utama (Wajib di isi) (Ambil dari database)
+Fakultas (Alternatif 1) (Ambil dari database)
+Prodi (Alternatif 1) (Ambil dari database)
+Fakultas (Alternatif 2) (Ambil dari database)
+Prodi (Alternatif 2) (Ambil dari database)
+Pendidikan Sebelumnya: 
+Nama Sekolah/Madrasah (wajib di isi)
+NISN (wajib di isi)
+Tipe (Wajib di isi) (Ambil dari database)
+Jenjang (Wajib di isi) (Ambil dari database)
++ Tipe isinya Umum dan Pondok Pesantren
++ Jenajng (umum : SD, SMP, SMA)(pondok pesantren: Madrasah Ibtidaiyah, Madrasah Tsanawiyah, Madrasah Aliyah)
+Tingkat Sebelumnya (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka jenjang nya sama dengan Kelas/Tingkat yang dipilih saat pendaftaran
+NISN (wajib di isi)
+NPSN
+NSM
+Alamat Sekolah
+
+Jika Jenjang dipilih S3 (Doktor):
+Fakultas Pilihan Utama (Wajib di isi) (Ambil dari database)
+Prodi Pilihan Utama (Wajib di isi) (Ambil dari database)
+Fakultas (Alternatif 1) (Ambil dari database)
+Prodi (Alternatif 1) (Ambil dari database)
+Fakultas (Alternatif 2) (Ambil dari database)
+Prodi (Alternatif 2) (Ambil dari database)
+Pendidikan Sebelumnya: 
+Nama Sekolah/Madrasah (wajib di isi)
+NISN (wajib di isi)
+Tipe (Wajib di isi) (Ambil dari database)
+Jenjang (Wajib di isi) (Ambil dari database)
++ Tipe isinya Umum dan Pondok Pesantren
++ Jenajng (umum : SD, SMP, SMA)(pondok pesantren: Madrasah Ibtidaiyah, Madrasah Tsanawiyah, Madrasah Aliyah)
+Tingkat Sebelumnya (Ambil dari database sesuai jenjang)(wajib di isi) - Jika jenis pendaftaran reguler, maka ambil tingkat default nya dari database, dan jika  pindahan maka jenjang nya sama dengan Kelas/Tingkat yang dipilih saat pendaftaran
+NISN (wajib di isi)
+NPSN
+NSM
+Alamat Sekolah
+
+Step 5: Lampiran
+Lampiran sesuai dengan database, admin yang seting lampiran pada masing-masing jenajng
+admin bisa seting wajib/tidak, jenis file (gambar atau dokumen) gambar jpg/png, dokumen pdf, dan ukuran file
+
+
+PRD:
++ Sistem Role + Permision (modul.action) contoh (staf.create) untuk melakukan action pada halaman, hiden menu sidebar jika tidak ada permision agar tidak terlihat
++ Ui buat dalam compoent seperti input dan button, tabel, modal, dan lainnya, agar desainnya konsisten
+untuk modal hapus itu harus konisten jadi icon yang digunakan sama semua dan tataletaknya juga 
++ Ui select untuk select kosong itu tampilannya "-- Pilih ..... --"
++ Pada tabel terdapat Input pencarian di atas tabel, dan input searchnya itu di kiri. dan terdapat select option untuk memilih berapa banyak data yang ditampilkan dan hanya menampilkan angka saja (5, 10, 25, 50, 100)
++ Filter pada tabel menggunakan modal agar lebih rapi
++ Filter pada setiap halaman harus ada tombol simpan dan reset, dan untuk filter di tabel bisa langsung di filter tanpa harus simpan. buatkan variabel filter selengkap mungkin sesuai kebutuhan
++ untuk semua modal buat agar tidak bisa di tutup jika klik di luar modal, hanya bisa di tutup melalui tombol x dan cancel atau batal
++ Pada tabel di ujung ada colom action, karena akan banyak action pada tabel tersebut pastikan buat dengan baik untuk mode dektop dan mobile, untuk mobile itu bisa menggunakan ofrelay canvas yang keluar dari bawah ke atas dan menampilkan daftar actionnya, untuk desktop itu kamu buatkan yang bagus, jangan sama seperti mobile karena akan jelek.
++ Pada export template atau Data pakai excel jika datanya nomor buat jadikan string tanpa "", agar tidak terformat oleh excel menjadi angkat tidak jelas 
+
+Halaman dan Menu Pegawai:
+A. Log system 
+Fitur:
++ cekbox pada row, dan bisa cekbox semua. ketika di cekbox memunculkan tombol hapus dan export, berdasarkan yang dipilih.
++ Pencarian berdasarkan user, waku, role, aksi modul.
++ Kosongkan semua log
++ Export semua log
++ pada row ada action detail dan hapus
++ halaman detail untuk menampilkan semua detail log, seperti user yang melakukannya, modul, action, deskripsi, date time, IP address, user agent, data sebelum dan sesudah dilakukan aksi
++ Untuk hapus konfirmasinya menggunakan modal
++ Tabel log menampilkan semua data log, dengan kolom cekbox, user, role, modul, action, date time, dan action (detail, hapus)
+
+B. Role
+Fitur:
++ Tambah Role, menampilkan modal, dan ada input Nama Role, dan bisa memilih permision dengan sistem modul.action
+jadi nanti action di kelompokan berdasarkan modulnya, dan bisa memilih action yang diizinkan, atau langsung clik modul untuk izinkan semuanya
++ Edit Role, menampilkan modal, dan ada input Nama Role (value data role lama), dan bisa edit pilihan permision dengan sistem modul.action
+jadi nanti action di kelompokan berdasarkan modulnya, dan bisa memilih action yang diizinkan, atau langsung clik modul untuk izinkan semuanya
++ Hapus role, menggunakan modal untuk konfirmasi (Role Super Admin, pendaftar tidak bisa di hapus siapapun)
++ Tabel role menampilkan semua data role, dengan kolom arow, nama role, dan action (edit, hapus)
++ pada colom row kalau di clik akan memunculkan colapse dan menampilkan semua permision yang dimiliki oleh role tersebut.
+
+C. Pegawai
+Fitur:
++ Halaman Tambah Pegawai untuk foto tambah fitur crop 1:1. di halaman ini tidak ada untuk tambah role.
++ Halaman Edit Pegawai value lama pegawai dan image nya juga tampilkan. untuk foto bisa edit juga dengan crop 1:1, di halaman ini tidak ada untuk edit role juga.
++ Halaman edit dan tambah layoutnya dan tataletaknya harus sama.
++ Hapus menampilkan modal konfirmasi hapus
++ Atur role menampilkan modal, dan ada select role, jika role sudah ada maka yang diselet itu rolenya, kalau belum ada maka selectnya kosong.
++ Reset password menampilkan modal, dan ada input password baru dan konfirmasi password baru. pada input password defaultnya tanggal lahir
++ Halaman import pegawai, import file excel dari template, terdapat card tabel preview data yang di import, pada row tabelnya terdapat form input sesuai tipe datanya, kalau tanggal maka date
+dan terdapat invalid feedback juga. dan di depan ada tombol untuk hapus row tersebut.
++ Export saat export memunculkan modal, dan bisa download template resmi yang di terbitkan system. dan ada download export all data.
++ Terdapat colom cekbox di depan, ketika di cekbox memunculkan tombol hapus dan export, berdasarkan yang dipilih. 
++ Pada tabel colom action terdapat action  cekbox paling depan,detail, edit, hapus, reset password, atur role, aktifkan(jika nonaktif), nonaktifkan(jika aktif).
+
+D. Ukuran Baju
+Fitur:
++ Tambah Ukuran Baju, menampilkan modal, dan ada input Nama Ukuran Baju
++ Edit Ukuran Baju, menampilkan modal, dan ada input Nama Ukuran Baju (value data ukuran baju lama)
++ Hapus Ukuran Baju, menampilkan modal konfirmasi hapus
++ Tabel ukuran baju menampilkan semua data ukuran baju, dengan kolom nomor, nama ukuran baju, dan action (edit, hapus)
+
+E. Pendidikan Terakhir Orang Tua
+Fitur:
++ Tambah Pendidikan Terakhir Orang Tua, menampilkan modal, dan ada input Nama Pendidikan Terakhir Orang Tua
++ Edit Pendidikan Terakhir Orang Tua, menampilkan modal, dan ada input Nama Pendidikan Terakhir Orang Tua (value data pendidikan terakhir orang tua lama)
++ Hapus Pendidikan Terakhir Orang Tua, menampilkan modal konfirmasi hapus
++ Tabel Pendidikan Terakhir Orang Tua menampilkan semua data pendidikan terakhir orang tua, dengan kolom nomor, nama pendidikan terakhir orang tua, dan action (edit, hapus)
+
+F. Pekerjaan Orang Tua
+Fitur :
++ Tambah Pekerjaan Orang Tua, menampilkan modal, dan ada input Nama Pekerjaan Orang Tua, ada cekbox untuk pekerjaan lainnya, jika di clik pada input nama pekerjaan maka langsung jadi Pekerjaan Lainnya, tidak bisa di ubah. dan pekerjaan lainnya cuma bisa 1 saja. jadi kalau sudah ada maka dibuat disabeld
++ Edit Pekerjaan Orang Tua, menampilkan modal, dan ada input Nama Pekerjaan Orang Tua (value data pekerjaan orang tua lama), ada cekbox untuk pekerjaan lainnya, jika di clik pada input nama pekerjaan maka langsung jadi Pekerjaan Lainnya, tidak bisa di ubah. dan pekerjaan lainnya cuma bisa 1 saja. jadi kalau sudah ada maka dibuat disabeld
++ Hapus Pekerjaan Orang Tua, menampilkan modal konfirmasi hapus
++ Tabel Pekerjaan Orang Tua menampilkan semua data pekerjaan orang tua, dengan kolom nomor, nama pekerjaan orang tua, dan action (edit, hapus)
+
+G. Pendidikan Pendaftar Sebelumnya
+Fitur:
++ Tambah Pendidikan Pendaftar Sebelumnya, menampilkan modal, dan ada select untuk Tipe Jenjang (Umum/Pondok Pesantren), input nama jenjang
++ Edit Pendidikan Pendaftar Sebelumnya, menampilkan modal, dan ada select untuk Tipe Jenjang (Umum/Pondok Pesantren), input nama jenjang (value data pendidikan pendaftar sebelumnya lama)
++ Hapus Pendidikan Pendaftar Sebelumnya, menampilkan modal konfirmasi hapus
++ Tabel Pendidikan Pendaftar Sebelumnya menampilkan semua data pendidikan pendaftar sebelumnya, dengan kolom arow, Tipe Jenjang, nama pendidikan pendaftar sebelumnya, dan action (edit, hapus)
++ Pada kolom arow kalau di clik akan memunculkan colapse dan menampilkan Tingkat Pendidikan untuk jenajang sebelumnya
++ Pada colapse terdapat action Tambah, Edit Hapus, dan dalam colapse menampilkan  nomor, Tingkat Pendidikan dan action (edit, hapus).
++ Tambah tingkat pendidikan untuk jenjang sebelumnya menampilkan modal, dan ada input nama tingkat jenjang
++ Edit tingkat pendidikan untuk jenjang sebelumnya menampilkan modal, dan ada input nama tingkat jenjang (value data tingkat pendidikan sebelumnya lama).
++ Hapus tingkat pendidikan untuk jenjang sebelumnya menampilkan modal konfirmasi hapus
+
+H. Penghasilan Orang Tua
+Fitur:
++ Tambah Penghasilan orang tua menampilkan modal, dan ada input penghasilan orang tua, tabel database jenis input string, jadi nanti bisa input < 1 Juta, 1-2 Juta.
++ Edit Penghasilan Orang Tua menampilkan modal, dan ada input penghasilan orang tua.
++ Hapus Penghasilan Orang Tua menampilkan modal konfirmasi hapus
++ Tabel Penghasilan Orang Tua menampilkan semua data penghasilan orang tua, dengan kolom nomor, penghasilan orang tua, dan action (edit, hapus)
+
+I. Program Pendidikan (untuk mengatur jurusan untuk jenjang MA, Fakultas dan Prodi untuk S1-S3)
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
++ Pada tab MTs ada tabel menampilkan data tingkat mts, dengan kolom nomor, nama tingkat mts (7, 8, 9), dan action (edit, hapus)
+Pada tab MTs ada action:
+    + Cekbox perempuan, jika di ceklis maka hanya pendaftar perempuan yang dapat mendaftar tingkat mts
+    + Cekbox laki-laki, jika di ceklis maka hanya pendaftar laki-laki yang dapat mendaftar tingkat mts
+    + Cekbox bisa keduanya di aktifkan, dan pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada tingkat mts
+    + Tambah tingkat mts menampilkan modal, dan ada input nama tingkat untuk mts
+    + Edit tingkat mts menampilkan modal, dan ada input nama tingkat untuk mts (value data tingkat mts lama)
+    + Hapus tingkat mts menampilkan modal konfirmasi hapus
+    + Tabel tingkat mts menampilkan data tingkat mts, dengan kolom nomor, nama tingkat mts (7, 8, 9), dan action (edit, hapus)
+Pada tab MA ada action:
+    + Terdapat 2 tabel, 1 tabel Tingkat MA dan 1 tabel Jurusan MA, untuk ukuran 2:4 jangan dibuat sama ukurannya agar bagus
+    + Tabel tingkat ma menampilkan data tingkat ma, dengan kolom nomor, nama tingkat ma, dan action (edit, hapus)
+    + Tambah tingkat ma menampilkan modal, dan ada input nama tingkat untuk ma
+    + Edit tingkat ma menampilkan modal, dan ada input nama tingkat untuk ma (value data tingkat ma lama)
+    + Hapus tingkat ma menampilkan modal konfirmasi hapus
+
+    + Tabel jurusan ma menampilkan data jurusan ma, dengan kolom nomor, kode jurusan, nama jurusan, gender yang di izinkan, dan action (edit, hapus)    
+    + Tambah jurusan ma menampilkan modal, dan ada input kode jurusan, nama jurusan, dan cekbox peremupan dan laki-laki
+    + Pada colom cekbox perempuan dan laki-laki, jika di ceklis maka hanya pendaftar perempuan dan laki-laki yang dapat mendaftar pada jurusan tersebut, jika keduanya di ceklis maka pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada jurusan tersebut
+    + Edit jurusan ma menampilkan modal, dan ada input kode jurusan, nama jurusan, dan cekbox peremupan dan laki-laki (value data jurusan ma lama)
+    + Hapus jurusan ma menampilkan modal konfirmasi hapus
+    + Pada colom cekbox perempuan dan laki-laki, jika di ceklis maka hanya pendaftar perempuan dan laki-laki yang dapat mendaftar pada jurusan tersebut, jika keduanya di ceklis maka pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada jurusan tersebut
+Pada tab S1 ada action:
+    + Terdapat 2 tabel, 1 tabel Fakultas dan 1 tabel Program Studi, untuk ukuran 2:4 jangan dibuat sama ukurannya agar bagus
+    + Tabel Fakultas menampilkan data Fakultas, dengan kolom nomor, nama Fakultas, Kode Fakultas, jumlah program studi pada jenjang s1, dan action (edit, hapus)
+    + Tambah Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas
+    + Edit Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas (value data Fakultas lama)
+    + Hapus Fakultas menampilkan modal konfirmasi hapus
+
+    + Tabel Program Studi menampilkan data Program Studi, dengan kolom nomor, kode Program Studi, nama Program Studi, Fakultas, gender yang diizinkan, dan action (edit, hapus)    
+    + Tambah Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan
+    + Edit Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan (value data Program Studi lama)
+    + Hapus Program Studi menampilkan modal konfirmasi hapus
+    + Pada cekbox jika di ceklis maka hanya pendaftar perempuan dan laki-laki yang dapat mendaftar pada program studi tersebut, jika keduanya di ceklis maka pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada program studi tersebut
+Pada tab S2 ada action:
+    + Terdapat 2 tabel, 1 tabel Fakultas dan 1 tabel Program Studi, untuk ukuran 2:4 jangan dibuat sama ukurannya agar bagus
+    + Tabel Fakultas menampilkan data Fakultas, dengan kolom nomor, nama Fakultas, Kode Fakultas, jumlah program studi pada jenjang s2, dan action (edit, hapus)
+    + Tambah Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas
+    + Edit Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas (value data Fakultas lama)
+    + Hapus Fakultas menampilkan modal konfirmasi hapus
+
+    + Tabel Program Studi menampilkan data Program Studi, dengan kolom nomor, kode Program Studi, nama Program Studi, Fakultas, gender yang diizinkan, dan action (edit, hapus)    
+    + Tambah Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan
+    + Edit Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan (value data Program Studi lama)
+    + Hapus Program Studi menampilkan modal konfirmasi hapus
+    + Pada cekbox jika di ceklis maka hanya pendaftar perempuan dan laki-laki yang dapat mendaftar pada program studi tersebut, jika keduanya di ceklis maka pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada program studi tersebut
+Pada tab S3 ada action:
+    + Terdapat 2 tabel, 1 tabel Fakultas dan 1 tabel Program Studi, untuk ukuran 2:4 jangan dibuat sama ukurannya agar bagus
+    + Tabel Fakultas menampilkan data Fakultas, dengan kolom nomor, nama Fakultas, Kode Fakultas, jumlah program studi pada jenjang s3, dan action (edit, hapus)
+    + Tambah Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas
+    + Edit Fakultas menampilkan modal, dan ada input nama Fakultas dan Kode Fakultas (value data Fakultas lama)
+    + Hapus Fakultas menampilkan modal konfirmasi hapus
+
+    + Tabel Program Studi menampilkan data Program Studi, dengan kolom nomor, kode Program Studi, nama Program Studi, Fakultas, gender yang diizinkan, dan action (edit, hapus)    
+    + Tambah Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan
+    + Edit Program Studi menampilkan modal, dan ada select Fakultas, input kode Program Studi, nama Program Studi, cekbox laki-laki dan perempuan (value data Program Studi lama)
+    + Hapus Program Studi menampilkan modal konfirmasi hapus
+    + Pada cekbox jika di ceklis maka hanya pendaftar perempuan dan laki-laki yang dapat mendaftar pada program studi tersebut, jika keduanya di ceklis maka pendaftar dengan gender laki-laki dan perempuan bisa mendaftar pada program studi tersebut
+
+J. Dokumen Lampiran Pendaftaran
+Fitur:
++  Tambah Lampiran Pendaftaran menampilkan modal, dan ada input nama Dokumen, select Jenis Dokumen (Gambar:jpg, png, Dokumen:pdf), select Jalur Pendaftaran (Semua, Reguler, Pindahan), select Sifat Upload (Optional, Wajib), cekbox jadikan foto profil (hanya bisa 1 untuk dokumen lampiran, dan hanya bisa di clik kalau jenis gambar), cekbox jenjang pendaftaran (mts, ma, s1, s2, s3)
++  Edit Lampiran Pendaftaran menampilkan modal, dan ada input nama Dokumen, select Jenis Dokumen (Gambar:jpg, png, Dokumen:pdf), select Jalur Pendaftaran (Semua, Reguler, Pindahan), select Sifat Upload (Optional, Wajib), cekbox jadikan foto profil (hanya bisa 1 untuk dokumen lampiran, dan hanya bisa di clik kalau jenis gambar), cekbox jenjang pendaftaran (mts, ma, s1, s2, s3) (value data Lampiran Pendaftaran lama)
++  Hapus Lampiran Pendaftaran menampilkan modal konfirmasi hapus
++  Tabel Lampiran Pendaftaran menampilkan data Lampiran Pendaftaran, dengan kolom nomor, nama Dokumen, Jenis Dokumen, Jalur Pendaftaran, Sifat Upload, jenjang pendaftaran, foto profil jika true tampilanya foto profile jika false maka kasi - saja, dan action (edit, hapus)
+
+K. Tahun Akademik & Periode Pendaftaran
+Fitur:
++ Tabel Tahun Akademik menampilkan arow, Nama Tahun Akademik, Status (Aktif/Non Aktif), dan Action (Edit, Hapus)
++ Tambah Tahun Akademik menampilkan modal, dan ada input Nama Tahun Akademik, Switch Status (Aktif/Non Aktif)
++ Edit Tahun Akademik menampilkan modal, dan ada input Nama Tahun Akademik, Switch Status (Aktif/Non Aktif) (value data Tahun Akademik lama)
++ Hapus Tahun Akademik menampilkan modal konfirmasi hapus
++ Pada colom row kalau di clik akan memunculkan colapse dan menampilkan semua periode pendaftaran pada tahun akademik tersebut.
+Fitur pada colapse data priode pendaftaran
++ Menampilkan data nomor, nama priode, jalur pendaftaran, jenjang pendaftaran, tanggal buka, tanggal tutup, kouta, status (Buka, Tutup, Draft), dan action (Edit, Hapus, Setting)
++ Tambah Priode Pendaftaran menampilkan modal, dan ada select Tahun Akademik, input Nama Priode Pendaftaran, input tanggal buka, input tanggal tutup, input kouta, select status (Buka, Tutup, Draft)
++ Edit Priode Pendaftaran menampilkan modal, dan ada select Tahun Akademik, input Nama Priode Pendaftaran, input tanggal buka, input tanggal tutup, input kouta, select status (Buka, Tutup, Draft) (value data Priode Pendaftaran lama)
++ Hapus Priode Pendaftaran menampilkan modal konfirmasi hapus
++ Setting Priode Pendaftaran menampilkan modal, dan ada select list Jalur Pendaftaran (Semua, Reguler, Pindahan), cekbox Jenjang Pendaftaran, select list Gelombang Pendaftaran
+
+L: Daftar Bank dan Biaya Admin Bank
+Fitur:
++ Tabel Daftar Bank menampilkan data bank, dengan kolom arow, logo, kode bank, nama bank, total fee, status (Aktif/Non Aktif), dan action (edit, nonaktifkan/aktifkan, hapus)
++ Tambah Daftar Bank menampilkan modal, dan ada input logo bank (gambar), kode bank, nama bank, switch aktifkan/nonaktifkan
++ Edit Daftar Bank menampilkan modal, dan ada input logo bank (gambar), kode bank, nama bank, switch aktifkan/nonaktifkan (value data Daftar Bank lama)
++ Hapus Daftar Bank menampilkan modal konfirmasi hapus
++ Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya admin pada bank tersebut
+Fitur pada colapse biaya admin
++ Menampilkan data nomor, jenis biaya, biaya admin, dan action (Edit, Hapus)
++ Tambah biaya admin menampilkan modal, dan ada input jenis biaya, input biaya admin
++ Edit biaya admin menampilkan modal, dan ada input jenis biaya, input biaya admin (value data biaya admin lama)
++ Hapus biaya admin menampilkan modal konfirmasi hapus
+
+M: Jenis Biaya dan Biaya
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel Jenis Pembayara menampilkan arow, Nama Jenis, Jumlah Total Biaya, Action (Edit, Hapus)
+    + Tambah Jenis Pembayara menampilkan modal, dan ada input Nama Jenis,
+    + Edit Jenis Pembayara menampilkan modal, dan ada input Nama Jenis (value data Jenis Pembayara lama)
+    + Hapus Jenis Pembayara menampilkan modal konfirmasi hapus
+    + Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya
+    Fitur pada colapse biaya
+    + Menampilkan data nomor, nama biaya, jumlah biaya, dan action (Edit, Hapus)
+    + Tambah biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya
+    + Edit biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya (value data biaya lama)
+    + Hapus biaya menampilkan modal konfirmasi hapus
+Pada tab MA ada action:
+    + Tabel Jenis Pembayara menampilkan arow, Nama Jenis, Jumlah Total Biaya, Action (Edit, Hapus)
+    + Tambah Jenis Pembayara menampilkan modal, dan ada input Nama Jenis,
+    + Edit Jenis Pembayara menampilkan modal, dan ada input Nama Jenis (value data Jenis Pembayara lama)
+    + Hapus Jenis Pembayara menampilkan modal konfirmasi hapus
+    + Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya
+    Fitur pada colapse biaya
+    + Menampilkan data nomor, nama biaya, jumlah biaya, dan action (Edit, Hapus)
+    + Tambah biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya
+    + Edit biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya (value data biaya lama)
+    + Hapus biaya menampilkan modal konfirmasi hapus
+Pada tab S1 ada action:
+    + Tabel Jenis Pembayara menampilkan arow, Nama Jenis, Jumlah Total Biaya, Action (Edit, Hapus)
+    + Tambah Jenis Pembayara menampilkan modal, dan ada input Nama Jenis,
+    + Edit Jenis Pembayara menampilkan modal, dan ada input Nama Jenis (value data Jenis Pembayara lama)
+    + Hapus Jenis Pembayara menampilkan modal konfirmasi hapus
+    + Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya
+    Fitur pada colapse biaya
+    + Menampilkan data nomor, nama biaya, jumlah biaya, dan action (Edit, Hapus)
+    + Tambah biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya
+    + Edit biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya (value data biaya lama)
+    + Hapus biaya menampilkan modal konfirmasi hapus
+Pada tab S2 ada action:
+    + Tabel Jenis Pembayara menampilkan arow, Nama Jenis, Jumlah Total Biaya, Action (Edit, Hapus)
+    + Tambah Jenis Pembayara menampilkan modal, dan ada input Nama Jenis,
+    + Edit Jenis Pembayara menampilkan modal, dan ada input Nama Jenis (value data Jenis Pembayara lama)
+    + Hapus Jenis Pembayara menampilkan modal konfirmasi hapus
+    + Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya
+    Fitur pada colapse biaya
+    + Menampilkan data nomor, nama biaya, jumlah biaya, dan action (Edit, Hapus)
+    + Tambah biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya
+    + Edit biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya (value data biaya lama)
+    + Hapus biaya menampilkan modal konfirmasi hapus
+Pada tab S3 ada action:
+    + Tabel Jenis Pembayara menampilkan arow, Nama Jenis, Jumlah Total Biaya, Action (Edit, Hapus)
+    + Tambah Jenis Pembayara menampilkan modal, dan ada input Nama Jenis,
+    + Edit Jenis Pembayara menampilkan modal, dan ada input Nama Jenis (value data Jenis Pembayara lama)
+    + Hapus Jenis Pembayara menampilkan modal konfirmasi hapus
+    + Pada colom arow kalau di clik akan memunculkan colapse dan menampilkan daftar biaya
+    Fitur pada colapse biaya
+    + Menampilkan data nomor, nama biaya, jumlah biaya, dan action (Edit, Hapus)
+    + Tambah biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya
+    + Edit biaya menampilkan modal, dan ada input nama biaya, input jumlah biaya (value data biaya lama)
+    + Hapus biaya menampilkan modal konfirmasi hapus
+
+N: Virtual Account Pendaftar
+Fitur:
++ Mampilkan data cekbox, nik pendaftar, nama pendaftar, bank{loop dari tabel bank yang aktif}, action(edit, hapus)
++ Tambah virtual account menampilkan modal, ada fitur pencarian pendaftar berdasarkan nik atau nama, card untuk menampilkan nama, sebelum ada nama tampilannya cuma - doang. ketika sudah selesai pencarian dan dipilih pendaftarnya. daftar bank dan inputan virtual account setiap banknya menjadi tidak disabel, kalau belum dipilih inputannya disabel. 
++ Edit virtual account menampilkan modal, card menampilkan nama pendaftar, daftar bank dan inputan virtual account setiap banknya tidak disabel. (value data virtual account lama)
++ Hapus virtual account menampilkan modal konfirmasi hapus
++ Halaman Import virtual account pendaftar, import file dari template, terdapat card tabel preview data yang di import, pada row tabelnya terdapat form input
+dari file excel dan ada validasi format excel, dan menampilkan preview data sebelum di import. terdapat invalid feedback juga. inputannya ada nik, nama pendaftar, virtual account setiap bank yang aktif dan 1 kolom lagi untuk hapus agar tidak masuk import
++ Export menampilkan modal, dan bisa download template resmi yang di terbitkan system. dan ada download export all data.
++ cekbox dapat melakukan hapus multiple, export data yang di pilih.
+
+O: Pendaftar Draft
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel menampilkan data dengan status draf, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status draft
+Pada tab MA ada action:
+    + Tabel menampilkan data dengan status draf, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status draft
+Pada tab S1 ada action:
+    + Tabel menampilkan data dengan status draf, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status draft
+Pada tab S2 ada action:
+    + Tabel menampilkan data dengan status draf, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status draft
+Pada tab S3 ada action:
+    + Tabel menampilkan data dengan status draf, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status draft
+
+P: Pendaftar Submit
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab MA ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S1 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S2 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S3 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+
+Q: Pendaftar Submit (Status pendaftaran submit)
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(tolak/terima pendaftaran,cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Tombol terima/tolak pendaftaran memunuclkan modal, ketika clik tolak akan memunculkan inputan text untuk memberikann catatan apa yang perlu di perbaiki, dan statusnya ke draf, kalau clik terima maka statusnya menjadi tagihan
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran  dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab MA ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(tolak/terima pendaftaran,cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Tombol terima/tolak pendaftaran memunuclkan modal, ketika clik tolak akan memunculkan inputan text untuk memberikann catatan apa yang perlu di perbaiki, dan statusnya ke draf, kalau clik terima maka statusnya menjadi tagihan
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran  dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S1 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(tolak/terima pendaftaran,cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Tombol terima/tolak pendaftaran memunuclkan modal, ketika clik tolak akan memunculkan inputan text untuk memberikann catatan apa yang perlu di perbaiki, dan statusnya ke draf, kalau clik terima maka statusnya menjadi tagihan
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran  dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S2 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(tolak/terima pendaftaran,cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Tombol terima/tolak pendaftaran memunuclkan modal, ketika clik tolak akan memunculkan inputan text untuk memberikann catatan apa yang perlu di perbaiki, dan statusnya ke draf, kalau clik terima maka statusnya menjadi tagihan
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran  dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+Pada tab S3 ada action:
+    + Tabel menampilkan data dengan status submit, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pendaftaran, action(tolak/terima pendaftaran,cetak kartu, detail, reset password, hapus)
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Tombol terima/tolak pendaftaran memunuclkan modal, ketika clik tolak akan memunculkan inputan text untuk memberikann catatan apa yang perlu di perbaiki, dan statusnya ke draf, kalau clik terima maka statusnya menjadi tagihan
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran  dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status submit
+
+R: Pendaftar Tagihan (Status pembuatan tagihan belum dibuat dan status tagihan belum lunas)
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel menampilkan data dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan tagihan (telah dibuat/belum), status tagihan "jika sudah dibuat tagihannya" (Belum Bayar, Belum Lunas, Samaha, Lunas), Jumlah Tagihan, dan sisa tagihan, status pembayaran (menunggu verifikasi, diterima, ditolak), status pendaftaran, action(terima/tolak pembayaran, buat tagihan/hapus tagihan jika sudah dibuat tagihan, detail tagihan,cetak kartu, detail, reset password, hapus)
+    + Tombol terima/tolak pembayaran hanya muncul kalau ada pembayaran perlu diverifikasi oleh pegawai, modal menampilkan infromasi nomor tagihan, sisa tagihan, nomor invoice, Jumlah Pembayaran, Tanggal Bayar, Jenis Pembayaran (Tunai, Transfer, Samaha/Potongan), jika transer menampilkan informasi Bank, nomor virtual account dan Bukti Bayar (bank dan virtual account ini berasal dari tabel bank dan virtual account jadi nanti pegawai validasi ke bank dimana uangnya masuk berdasarkan va nya, ini bukan bank yang digunakan pendaftar untuk membayar ya jangan salah paham), jika jenis pembayarannya tunai atau samaha menampilkan data pegawai yang memberikan samaha/potongan, dan tunai menampilkan data pegawai yang mengurus input ke sistem 
+    + Halaman Buat tagihan menampilkan card tagihan (form), yang digunakan untuk mengisi formulir tagihan seperti nama tagihan, jenis, nomal tagihan, tanggal tagihan diterbitkan ke pendaftar, dan tanggal jatuh tempo. kemudian di halaman ini juga menampilkan card daftar pendaftar yang menerima tagihan ini. buat dalam bentuk tabel dengan menampilkan nama pendaftar, nik, cabang, input untuk memberikan samaha/potongan, action untuk hapus dari daftar. jadi nanti kalau ada potongan langsung tambahkan pembayaran dengan jenis samaha. kemudian ada tombol untuk tambahkan pendaftar, dan memunculkan modal, dalam modal menampilkan pencarian dan filter cabang dapat mencari menggunakan nama, nik, nomor pendaftaran. kemudian ketika dipilih bisa menambahkan pendaftar tersebut ke dalam tabel daftar pendaftar yang menerima tagihan ini.
+    + Halaman detail tagihan menampilkan 3 card 1 informasi tagihan, 2 informasi pendaftar, 3 daftar pembayaran tagihan, menampilkan data jumlah bayar, jenis pembayaran, status pembayaran, keterangan, aksi (detail, edit pembayaran (jika pembayarannya tunai atau samaha), verifikasi pembayaran (jika pembayarannya transfer))
+        + Jika clik edit pembayaran maka memunculkan modal dengan menampilkan detail pembayaran seperti modal detail tapi ada tambahan form edit pembayaran dan ada input untuk jumlah pembayaran
+        + Jika clik verifikasi pembayaran maka memunculkan modal verifikasi pembayaran, dengan menampilkan informasi detail pembayaran seperti modal detail. tapi ada action untuk menerima/menolak pembayaran, dan mengubah ke verifikasi pembayaran. jika di tolak maka ada inputan jumlah pembayaran dan alasan penolakan, jika terima akan memunculkan form input jumlah pembayaran. jika kembalikan ke verifikasi maka akan menmapilkan form input alasannya.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran, membuat tagihan dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas
+Pada tab MA ada action:
+    + Tabel menampilkan data dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan tagihan (telah dibuat/belum), status tagihan "jika sudah dibuat tagihannya" (Belum Bayar, Belum Lunas, Samaha, Lunas), Jumlah Tagihan, dan sisa tagihan, status pembayaran (menunggu verifikasi, diterima, ditolak), status pendaftaran, action(terima/tolak pembayaran, buat tagihan/hapus tagihan jika sudah dibuat tagihan, detail tagihan,cetak kartu, detail, reset password, hapus)
+    + Tombol terima/tolak pembayaran hanya muncul kalau ada pembayaran perlu diverifikasi oleh pegawai, modal menampilkan infromasi nomor tagihan, sisa tagihan, nomor invoice, Jumlah Pembayaran, Tanggal Bayar, Jenis Pembayaran (Tunai, Transfer, Samaha/Potongan), jika transer menampilkan informasi Bank, nomor virtual account dan Bukti Bayar (bank dan virtual account ini berasal dari tabel bank dan virtual account jadi nanti pegawai validasi ke bank dimana uangnya masuk berdasarkan va nya, ini bukan bank yang digunakan pendaftar untuk membayar ya jangan salah paham), jika jenis pembayarannya tunai atau samaha menampilkan data pegawai yang memberikan samaha/potongan, dan tunai menampilkan data pegawai yang mengurus input ke sistem 
+    + Halaman Buat tagihan menampilkan card tagihan (form), yang digunakan untuk mengisi formulir tagihan seperti nama tagihan, jenis, nomal tagihan, tanggal tagihan diterbitkan ke pendaftar, dan tanggal jatuh tempo. kemudian di halaman ini juga menampilkan card daftar pendaftar yang menerima tagihan ini. buat dalam bentuk tabel dengan menampilkan nama pendaftar, nik, cabang, input untuk memberikan samaha/potongan, action untuk hapus dari daftar. jadi nanti kalau ada potongan langsung tambahkan pembayaran dengan jenis samaha. kemudian ada tombol untuk tambahkan pendaftar, dan memunculkan modal, dalam modal menampilkan pencarian dan filter cabang dapat mencari menggunakan nama, nik, nomor pendaftaran. kemudian ketika dipilih bisa menambahkan pendaftar tersebut ke dalam tabel daftar pendaftar yang menerima tagihan ini.
+    + Halaman detail tagihan menampilkan 3 card 1 informasi tagihan, 2 informasi pendaftar, 3 daftar pembayaran tagihan, menampilkan data jumlah bayar, jenis pembayaran, status pembayaran, keterangan, aksi (detail, edit pembayaran (jika pembayarannya tunai atau samaha), verifikasi pembayaran (jika pembayarannya transfer))
+        + Jika clik edit pembayaran maka memunculkan modal dengan menampilkan detail pembayaran seperti modal detail tapi ada tambahan form edit pembayaran dan ada input untuk jumlah pembayaran
+        + Jika clik verifikasi pembayaran maka memunculkan modal verifikasi pembayaran, dengan menampilkan informasi detail pembayaran seperti modal detail. tapi ada action untuk menerima/menolak pembayaran, dan mengubah ke verifikasi pembayaran. jika di tolak maka ada inputan jumlah pembayaran dan alasan penolakan, jika terima akan memunculkan form input jumlah pembayaran. jika kembalikan ke verifikasi maka akan menmapilkan form input alasannya.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran, membuat tagihan dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas
+Pada tab S1 ada action:
+    + Tabel menampilkan data dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan tagihan (telah dibuat/belum), status tagihan "jika sudah dibuat tagihannya" (Belum Bayar, Belum Lunas, Samaha, Lunas), Jumlah Tagihan, dan sisa tagihan, status pembayaran (menunggu verifikasi, diterima, ditolak), status pendaftaran, action(terima/tolak pembayaran, buat tagihan/hapus tagihan jika sudah dibuat tagihan, detail tagihan,cetak kartu, detail, reset password, hapus)
+    + Tombol terima/tolak pembayaran hanya muncul kalau ada pembayaran perlu diverifikasi oleh pegawai, modal menampilkan infromasi nomor tagihan, sisa tagihan, nomor invoice, Jumlah Pembayaran, Tanggal Bayar, Jenis Pembayaran (Tunai, Transfer, Samaha/Potongan), jika transer menampilkan informasi Bank, nomor virtual account dan Bukti Bayar (bank dan virtual account ini berasal dari tabel bank dan virtual account jadi nanti pegawai validasi ke bank dimana uangnya masuk berdasarkan va nya, ini bukan bank yang digunakan pendaftar untuk membayar ya jangan salah paham), jika jenis pembayarannya tunai atau samaha menampilkan data pegawai yang memberikan samaha/potongan, dan tunai menampilkan data pegawai yang mengurus input ke sistem 
+    + Halaman Buat tagihan menampilkan card tagihan (form), yang digunakan untuk mengisi formulir tagihan seperti nama tagihan, jenis, nomal tagihan, tanggal tagihan diterbitkan ke pendaftar, dan tanggal jatuh tempo. kemudian di halaman ini juga menampilkan card daftar pendaftar yang menerima tagihan ini. buat dalam bentuk tabel dengan menampilkan nama pendaftar, nik, cabang, input untuk memberikan samaha/potongan, action untuk hapus dari daftar. jadi nanti kalau ada potongan langsung tambahkan pembayaran dengan jenis samaha. kemudian ada tombol untuk tambahkan pendaftar, dan memunculkan modal, dalam modal menampilkan pencarian dan filter cabang dapat mencari menggunakan nama, nik, nomor pendaftaran. kemudian ketika dipilih bisa menambahkan pendaftar tersebut ke dalam tabel daftar pendaftar yang menerima tagihan ini.
+    + Halaman detail tagihan menampilkan 3 card 1 informasi tagihan, 2 informasi pendaftar, 3 daftar pembayaran tagihan, menampilkan data jumlah bayar, jenis pembayaran, status pembayaran, keterangan, aksi (detail, edit pembayaran (jika pembayarannya tunai atau samaha), verifikasi pembayaran (jika pembayarannya transfer))
+        + Jika clik edit pembayaran maka memunculkan modal dengan menampilkan detail pembayaran seperti modal detail tapi ada tambahan form edit pembayaran dan ada input untuk jumlah pembayaran
+        + Jika clik verifikasi pembayaran maka memunculkan modal verifikasi pembayaran, dengan menampilkan informasi detail pembayaran seperti modal detail. tapi ada action untuk menerima/menolak pembayaran, dan mengubah ke verifikasi pembayaran. jika di tolak maka ada inputan jumlah pembayaran dan alasan penolakan, jika terima akan memunculkan form input jumlah pembayaran. jika kembalikan ke verifikasi maka akan menmapilkan form input alasannya.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran, membuat tagihan dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas
+Pada tab S2 ada action:
+   + Tabel menampilkan data dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan tagihan (telah dibuat/belum), status tagihan "jika sudah dibuat tagihannya" (Belum Bayar, Belum Lunas, Samaha, Lunas), Jumlah Tagihan, dan sisa tagihan, status pembayaran (menunggu verifikasi, diterima, ditolak), status pendaftaran, action(terima/tolak pembayaran, buat tagihan/hapus tagihan jika sudah dibuat tagihan, detail tagihan,cetak kartu, detail, reset password, hapus)
+    + Tombol terima/tolak pembayaran hanya muncul kalau ada pembayaran perlu diverifikasi oleh pegawai, modal menampilkan infromasi nomor tagihan, sisa tagihan, nomor invoice, Jumlah Pembayaran, Tanggal Bayar, Jenis Pembayaran (Tunai, Transfer, Samaha/Potongan), jika transer menampilkan informasi Bank, nomor virtual account dan Bukti Bayar (bank dan virtual account ini berasal dari tabel bank dan virtual account jadi nanti pegawai validasi ke bank dimana uangnya masuk berdasarkan va nya, ini bukan bank yang digunakan pendaftar untuk membayar ya jangan salah paham), jika jenis pembayarannya tunai atau samaha menampilkan data pegawai yang memberikan samaha/potongan, dan tunai menampilkan data pegawai yang mengurus input ke sistem 
+    + Halaman Buat tagihan menampilkan card tagihan (form), yang digunakan untuk mengisi formulir tagihan seperti nama tagihan, jenis, nomal tagihan, tanggal tagihan diterbitkan ke pendaftar, dan tanggal jatuh tempo. kemudian di halaman ini juga menampilkan card daftar pendaftar yang menerima tagihan ini. buat dalam bentuk tabel dengan menampilkan nama pendaftar, nik, cabang, input untuk memberikan samaha/potongan, action untuk hapus dari daftar. jadi nanti kalau ada potongan langsung tambahkan pembayaran dengan jenis samaha. kemudian ada tombol untuk tambahkan pendaftar, dan memunculkan modal, dalam modal menampilkan pencarian dan filter cabang dapat mencari menggunakan nama, nik, nomor pendaftaran. kemudian ketika dipilih bisa menambahkan pendaftar tersebut ke dalam tabel daftar pendaftar yang menerima tagihan ini.
+    + Halaman detail tagihan menampilkan 3 card 1 informasi tagihan, 2 informasi pendaftar, 3 daftar pembayaran tagihan, menampilkan data jumlah bayar, jenis pembayaran, status pembayaran, keterangan, aksi (detail, edit pembayaran (jika pembayarannya tunai atau samaha), verifikasi pembayaran (jika pembayarannya transfer))
+        + Jika clik edit pembayaran maka memunculkan modal dengan menampilkan detail pembayaran seperti modal detail tapi ada tambahan form edit pembayaran dan ada input untuk jumlah pembayaran
+        + Jika clik verifikasi pembayaran maka memunculkan modal verifikasi pembayaran, dengan menampilkan informasi detail pembayaran seperti modal detail. tapi ada action untuk menerima/menolak pembayaran, dan mengubah ke verifikasi pembayaran. jika di tolak maka ada inputan jumlah pembayaran dan alasan penolakan, jika terima akan memunculkan form input jumlah pembayaran. jika kembalikan ke verifikasi maka akan menmapilkan form input alasannya.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran, membuat tagihan dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas
+Pada tab S3 ada action:
+    + Tabel menampilkan data dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan tagihan (telah dibuat/belum), status tagihan "jika sudah dibuat tagihannya" (Belum Bayar, Belum Lunas, Samaha, Lunas), Jumlah Tagihan, dan sisa tagihan, status pembayaran (menunggu verifikasi, diterima, ditolak), status pendaftaran, action(terima/tolak pembayaran, buat tagihan/hapus tagihan jika sudah dibuat tagihan, detail tagihan,cetak kartu, detail, reset password, hapus)
+    + Tombol terima/tolak pembayaran hanya muncul kalau ada pembayaran perlu diverifikasi oleh pegawai, modal menampilkan infromasi nomor tagihan, sisa tagihan, nomor invoice, Jumlah Pembayaran, Tanggal Bayar, Jenis Pembayaran (Tunai, Transfer, Samaha/Potongan), jika transer menampilkan informasi Bank, nomor virtual account dan Bukti Bayar (bank dan virtual account ini berasal dari tabel bank dan virtual account jadi nanti pegawai validasi ke bank dimana uangnya masuk berdasarkan va nya, ini bukan bank yang digunakan pendaftar untuk membayar ya jangan salah paham), jika jenis pembayarannya tunai atau samaha menampilkan data pegawai yang memberikan samaha/potongan, dan tunai menampilkan data pegawai yang mengurus input ke sistem 
+    + Halaman Buat tagihan menampilkan card tagihan (form), yang digunakan untuk mengisi formulir tagihan seperti nama tagihan, jenis, nomal tagihan, tanggal tagihan diterbitkan ke pendaftar, dan tanggal jatuh tempo. kemudian di halaman ini juga menampilkan card daftar pendaftar yang menerima tagihan ini. buat dalam bentuk tabel dengan menampilkan nama pendaftar, nik, cabang, input untuk memberikan samaha/potongan, action untuk hapus dari daftar. jadi nanti kalau ada potongan langsung tambahkan pembayaran dengan jenis samaha. kemudian ada tombol untuk tambahkan pendaftar, dan memunculkan modal, dalam modal menampilkan pencarian dan filter cabang dapat mencari menggunakan nama, nik, nomor pendaftaran. kemudian ketika dipilih bisa menambahkan pendaftar tersebut ke dalam tabel daftar pendaftar yang menerima tagihan ini.
+    + Halaman detail tagihan menampilkan 3 card 1 informasi tagihan, 2 informasi pendaftar, 3 daftar pembayaran tagihan, menampilkan data jumlah bayar, jenis pembayaran, status pembayaran, keterangan, aksi (detail, edit pembayaran (jika pembayarannya tunai atau samaha), verifikasi pembayaran (jika pembayarannya transfer))
+        + Jika clik edit pembayaran maka memunculkan modal dengan menampilkan detail pembayaran seperti modal detail tapi ada tambahan form edit pembayaran dan ada input untuk jumlah pembayaran
+        + Jika clik verifikasi pembayaran maka memunculkan modal verifikasi pembayaran, dengan menampilkan informasi detail pembayaran seperti modal detail. tapi ada action untuk menerima/menolak pembayaran, dan mengubah ke verifikasi pembayaran. jika di tolak maka ada inputan jumlah pembayaran dan alasan penolakan, jika terima akan memunculkan form input jumlah pembayaran. jika kembalikan ke verifikasi maka akan menmapilkan form input alasannya.
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, terima/tolak pendaftaran, membuat tagihan dan export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status Status pembuatan tagihan belum dibuat dan status tagihan belum lunas
+
+S: Pendaftar Set Inverview (status pembuatan interview belum dibuat, status pembuatan tagihan telah dibuat, dan status tagihan lunas)
+Fitur:
++ Ada tab untuk pindah jenjang (MTs, MA, S1, S2, S3)
++ Pada tile di masing masing tab ada ada Kode (MTs, MA, S1, S2, S3), dan Nama Jenjangnya (Madrasah Tsanawiyah, Madrasah Aliyah, Strata 1, Pasca Sarjana, Doktor)
+Pada tab MTs ada action:
+    + Tabel menampilkan data dengan status status pembuatan interview belum dibuat, status pembuatan tagihan telah dibuat, dan status tagihan lunas, pada tabel menampilkan cekbox, nomor pendaftar, tanggal pendaftaran, nik pendaftar, nama pendaftar, kontak, asal daerah, cabang pendaftaran, jenjang pendaftaran, status pembuatan inverview (belum dibuat), action(tambah jadwal interview, cetak kartu, detail, reset password)
+    + Halaman tambah jadwal interview menampilkan card (form) jadwal interview dan card daftar pendaftar yang di tambahkan ke interview ini
+    + Cetak kartu membuka halaman baru dengan menampilkan kartu
+    + Halaman Detail Pendaftar menampilkan data pendaftar secara lengkap, foto profil, status pendaftaran, data pribadi - alamat, data orang tua dan wali, data jenjang piliha dan jenjang sebelumnya, lampiran pendaftaran, data virtual account, riwayat pendaftaran.
+    + Reset password menampilkan modal reset password, dan input password, confirmasi password. untuk default input password isinya dari tanggal lahirnya kalau sudah di isi. kalau belum kosongkan saja dan input sendiri.
+    + Hapus menampilkan modal konfirmasi hapus.
+    + Cekbox dapat melakukan hapus multiple, buat jadwal interview, export ke excel berdasarkan yang dipilih
+    + Export all data pendaftar dengan status status pembuatan interview belum dibuat, status pembuatan tagihan telah dibuat, dan status tagihan lunas
+Pada tab MA ada action:
+Pada tab S1 ada action:
+Pada tab S2 ada action:
+Pada tab S3 ada action:
+
+T: Status inverview (status pembuatan interview telah dibuat, status pembuatan tagihan telah dibuat, dan status tagihan lunas)

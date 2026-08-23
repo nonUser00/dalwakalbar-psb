@@ -143,20 +143,52 @@ class DraftPendaftarController extends Controller implements HasMiddleware
             }
         }
 
+        // Auto-heal any draft registrants missing periode_id or gelombang_id
+        $defaultWave = $gelombangsData->firstWhere('id', $gelombangId)
+            ?? $gelombangsData->firstWhere('is_currently_open', true)
+            ?? $gelombangsData->firstWhere('is_open', true)
+            ?? $gelombangsData->first();
+
+        if ($defaultWave) {
+            $defaultPeriodeId = $defaultWave['periode_id'];
+            $defaultGelombangId = $defaultWave['id'];
+
+            Pendaftar::where('status', 'DRAFT')
+                ->where(function ($q) {
+                    $q->whereNull('periode_id')->orWhereNull('gelombang_id');
+                })
+                ->update([
+                    'periode_id' => DB::raw("COALESCE(periode_id, '{$defaultPeriodeId}')"),
+                    'gelombang_id' => DB::raw("COALESCE(gelombang_id, '{$defaultGelombangId}')"),
+                ]);
+        }
+
         // Count per jenjang for draft status (strictly scoped to active academic year and selected wave)
         $jenjangCounts = [];
         foreach ($jenjangs as $j) {
-            $jenjangCounts[$j->id] = Pendaftar::where('status', 'DRAFT')
+            $jenjangCounts[$j->id] = Pendaftar::accessibleBy()
+                ->where('status', 'DRAFT')
                 ->where('jenjang_id', $j->id)
-                ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
-                ->when($gelombangId, fn ($q) => $q->where('gelombang_id', $gelombangId))
+                ->where(function ($q) use ($tahunAkademikId) {
+                    $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $tahunAkademikId))
+                        ->orWhereNull('periode_id');
+                })
+                ->when($gelombangId, function ($q) use ($gelombangId) {
+                    $q->where(function ($gq) use ($gelombangId) {
+                        $gq->where('gelombang_id', $gelombangId)
+                            ->orWhereNull('gelombang_id');
+                    });
+                })
                 ->count();
         }
 
         // Main Query (strictly scoped to active academic year)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', 'DRAFT')
-            ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
+            ->where(function ($q) use ($tahunAkademikId) {
+                $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $tahunAkademikId))
+                    ->orWhereNull('periode_id');
+            })
             ->with(['cabang', 'jenjang', 'periode.tahunAkademik', 'gelombang', 'dokumens.dokumen', 'virtualAccounts.bank']);
 
         if ($selectedJenjangId) {
@@ -164,7 +196,10 @@ class DraftPendaftarController extends Controller implements HasMiddleware
         }
 
         if ($gelombangId) {
-            $query->where('gelombang_id', $gelombangId);
+            $query->where(function ($q) use ($gelombangId) {
+                $q->where('gelombang_id', $gelombangId)
+                    ->orWhereNull('gelombang_id');
+            });
         }
 
         if ($search) {

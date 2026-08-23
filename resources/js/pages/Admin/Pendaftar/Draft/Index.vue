@@ -2345,7 +2345,7 @@ const getDetailUrl = (id: string) => {
                                         <span
                                             class="rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 uppercase"
                                         >
-                                            {{ doc.type === 'gambar' ? 'Foto / JPG' : 'PDF' }}
+                                            {{ doc.type === 'gambar' ? 'Foto / JPG' : doc.type === 'semua' ? 'PDF / Gambar' : 'PDF' }}
                                         </span>
                                     </div>
 

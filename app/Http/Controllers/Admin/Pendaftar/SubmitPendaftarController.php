@@ -147,7 +147,8 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
         // Count per jenjang for SUBMITTED status (scoped to active academic year and selected wave)
         $jenjangCounts = [];
         foreach ($jenjangs as $j) {
-            $jenjangCounts[$j->id] = Pendaftar::where('status', 'SUBMITTED')
+            $jenjangCounts[$j->id] = Pendaftar::accessibleBy()
+                ->where('status', 'SUBMITTED')
                 ->where('jenjang_id', $j->id)
                 ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
                 ->when($gelombangId, fn ($q) => $q->where('gelombang_id', $gelombangId))
@@ -155,7 +156,7 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
         }
 
         // Main Query (strictly scoped to active academic year)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', 'SUBMITTED')
             ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
             ->with(['cabang', 'jenjang', 'periode.tahunAkademik', 'gelombang', 'dokumens.dokumen', 'virtualAccounts.bank']);

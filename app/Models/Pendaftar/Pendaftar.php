@@ -6,6 +6,7 @@ use App\Enums\PendaftarStatus;
 use App\Enums\StatusKesehatan;
 use App\Enums\TipePendaftaran;
 use App\Models\Asrama\Keberangkatan;
+use App\Models\Auth\User;
 use App\Models\Keuangan\Pembayaran;
 use App\Models\Keuangan\Tagihan;
 use App\Models\Keuangan\VirtualAccount;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 
 class Pendaftar extends Authenticatable
 {
@@ -168,5 +170,85 @@ class Pendaftar extends Authenticatable
     public function hasilUjian(): HasOne
     {
         return $this->hasOne(HasilUjian::class, 'pendaftar_id');
+    }
+
+    public function scopeAccessibleBy($query, ?User $user = null)
+    {
+        $user = $user ?? Auth::user();
+
+        if (! $user || ($user instanceof User && $user->isSuperAdmin())) {
+            return $query;
+        }
+
+        // Filter Gender
+        if (! empty($user->allowed_gender) && $user->allowed_gender !== 'ALL') {
+            $g = $user->allowed_gender;
+            $query->where(function ($q) use ($g) {
+                if (in_array(strtolower($g), ['l', 'laki-laki', 'laki-laki '])) {
+                    $q->where('personal_data->jenis_kelamin', 'L')
+                        ->orWhere('personal_data->jenis_kelamin', 'Laki-Laki')
+                        ->orWhere('personal_data->jenis_kelamin', 'Laki-laki');
+                } elseif (in_array(strtolower($g), ['p', 'perempuan'])) {
+                    $q->where('personal_data->jenis_kelamin', 'P')
+                        ->orWhere('personal_data->jenis_kelamin', 'Perempuan');
+                }
+            });
+        }
+
+        // Filter Cabang
+        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids) && count($user->allowed_cabang_ids) > 0) {
+            $query->whereIn('cabang_id', $user->allowed_cabang_ids);
+        }
+
+        // Filter Jenjang
+        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids) && count($user->allowed_jenjang_ids) > 0) {
+            $query->whereIn('jenjang_id', $user->allowed_jenjang_ids);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Cek apakah pendaftar ini boleh diakses oleh user/pegawai tertentu.
+     */
+    public function isAccessibleBy(?User $user = null): bool
+    {
+        $user = $user ?? Auth::user();
+
+        if (! $user || ($user instanceof User && $user->isSuperAdmin())) {
+            return true;
+        }
+
+        // Cek Gender
+        if (! empty($user->allowed_gender) && $user->allowed_gender !== 'ALL') {
+            $candidateGender = strtolower((string) ($this->personal_data['jenis_kelamin'] ?? ''));
+            $allowedG = strtolower($user->allowed_gender);
+
+            if (in_array($allowedG, ['l', 'laki-laki'])) {
+                if (! in_array($candidateGender, ['l', 'laki-laki'])) {
+                    return false;
+                }
+            } elseif (in_array($allowedG, ['p', 'perempuan'])) {
+                if (! in_array($candidateGender, ['p', 'perempuan'])) {
+                    return false;
+                }
+            }
+        }
+
+        // Cek Cabang
+        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids) && count($user->allowed_cabang_ids) > 0) {
+            if (! in_array($this->cabang_id, $user->allowed_cabang_ids)) {
+                return false;
+            }
+        }
+
+        // Cek Jenjang
+        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids) && count($user->allowed_jenjang_ids) > 0) {
+            if (! in_array($this->jenjang_id, $user->allowed_jenjang_ids)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

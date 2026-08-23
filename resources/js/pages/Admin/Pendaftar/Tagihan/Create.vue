@@ -1188,7 +1188,7 @@ return;
                                     :class="
                                         formInfo.jenis_tagihan_id === kat.id
                                             ? 'bg-primary text-white ring-2 ring-primary/30 dark:bg-blue-600'
-                                            : 'border border-slate-300 bg-white group-hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900'
+                                            : 'border border-slate-300 bg-white group-hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800'
                                     "
                                 >
                                     <svg
@@ -1313,7 +1313,7 @@ return;
                                 MASA TENGGAT
                             </label>
                             <div
-                                class="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                class="flex h-[42px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             >
                                 <svg
                                     class="h-4 w-4 shrink-0 text-primary dark:text-blue-400"
@@ -1901,7 +1901,7 @@ return;
                                     type="text"
                                     v-model="modalSearch"
                                     placeholder="Cari data..."
-                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20"
+                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                                 />
                             </div>
 

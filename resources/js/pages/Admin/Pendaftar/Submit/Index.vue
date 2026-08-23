@@ -2595,7 +2595,7 @@ const getDetailUrl = (id: string) => {
                                 <!-- Card Footer: Document Details & Revision Note -->
                                 <div class="mt-2.5 space-y-1">
                                     <div class="flex items-center justify-between text-[10.5px] text-slate-500 dark:text-slate-400">
-                                        <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : 'PDF' }}</span>
+                                        <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : doc.type === 'semua' ? 'PDF / Gambar' : 'PDF' }}</span>
                                         <span v-if="getUploadedDocumentRecord(doc.id)">{{ formatDateTime(getUploadedDocumentRecord(doc.id)?.created_at) }}</span>
                                         <span v-else class="text-rose-500 font-bold">Kosong</span>
                                     </div>
@@ -3477,7 +3477,7 @@ const getDetailUrl = (id: string) => {
                                 <!-- Card Footer: Document Details -->
                                 <div class="mt-2.5 space-y-1">
                                     <div class="flex items-center justify-between text-[10.5px] text-slate-500 dark:text-slate-400">
-                                        <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : 'PDF' }}</span>
+                                        <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : doc.type === 'semua' ? 'PDF / Gambar' : 'PDF' }}</span>
                                         <span v-if="getUploadedDocumentRecord(doc.id)">{{ formatDateTime(getUploadedDocumentRecord(doc.id)?.created_at) }}</span>
                                         <span v-else class="text-rose-500 font-bold">Kosong</span>
                                     </div>

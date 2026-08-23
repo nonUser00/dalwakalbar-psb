@@ -162,7 +162,8 @@ class InterviewPendaftarPageController extends Controller implements HasMiddlewa
         // Count per jenjang for INTERVIEW status who have NOT been scheduled yet (scoped to active academic year and selected wave)
         $jenjangCounts = [];
         foreach ($jenjangs as $j) {
-            $jenjangCounts[$j->id] = Pendaftar::where('status', PendaftarStatus::Interview)
+            $jenjangCounts[$j->id] = Pendaftar::accessibleBy()
+                ->where('status', PendaftarStatus::Interview)
                 ->where('jenjang_id', $j->id)
                 ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
                 ->when($gelombangId, fn ($q) => $q->where('gelombang_id', $gelombangId))
@@ -180,7 +181,7 @@ class InterviewPendaftarPageController extends Controller implements HasMiddlewa
         }
 
         // Base candidate query (strictly status INTERVIEW, not yet scheduled, and in active academic year)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', PendaftarStatus::Interview)
             ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
             ->where(function ($q) {
@@ -320,14 +321,15 @@ class InterviewPendaftarPageController extends Controller implements HasMiddlewa
             $ids = is_array($idsParam) ? $idsParam : explode(',', $idsParam);
         }
 
-        $targetPendaftars = Pendaftar::whereIn('id', $ids)
+        $targetPendaftars = Pendaftar::accessibleBy()
+            ->whereIn('id', $ids)
             ->with(['cabang', 'jenjang', 'periode', 'gelombang', 'dokumens.dokumen', 'kelompokUjians.pengujis', 'kelompokUjians.koordinator'])
             ->get();
 
         $jenjangs = Jenjang::orderBy('created_at', 'asc')->get();
 
         // Candidates eligible for interview (across all jenjangs) who haven't been scheduled in the current cycle
-        $availablePendaftars = Pendaftar::query()
+        $availablePendaftars = Pendaftar::accessibleBy()
             ->where('status', PendaftarStatus::Interview)
             ->where(function ($q) {
                 $q->where(function ($sq) {

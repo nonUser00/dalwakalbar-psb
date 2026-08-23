@@ -172,7 +172,8 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
         // Live badge counts for candidates in announcement / admission stage per jenjang (strictly for active academic year)
         $badgeCounts = [];
         foreach ($allJenjangs as $j) {
-            $badgeCounts[$j->id] = Pendaftar::where('jenjang_id', $j->id)
+            $badgeCounts[$j->id] = Pendaftar::accessibleBy()
+                ->where('jenjang_id', $j->id)
                 ->whereHas('periode', function ($q) use ($tahunAkademikId) {
                     $q->where('tahun_akademik_id', $tahunAkademikId);
                 })
@@ -190,7 +191,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
         }
 
         // Main Query (strictly for active academic year)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->with([
                 'cabang:id,name',
                 'jenjang:id,code,name,singkatan,logo_path',

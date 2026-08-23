@@ -168,7 +168,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         // Count per jenjang for TAGIHAN status (scoped strictly to active academic year and selected wave)
         $jenjangCounts = [];
         foreach ($jenjangs as $j) {
-            $baseJenjangQuery = Pendaftar::where('status', PendaftarStatus::Tagihan)
+            $baseJenjangQuery = Pendaftar::accessibleBy()
+                ->where('status', PendaftarStatus::Tagihan)
                 ->where('jenjang_id', $j->id)
                 ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
                 ->when($gelombangId, fn ($q) => $q->where('gelombang_id', $gelombangId));
@@ -215,7 +216,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         }
 
         // Main Query (strictly scoped to active academic year)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', PendaftarStatus::Tagihan)
             ->whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $tahunAkademikId))
             ->with([
@@ -505,7 +506,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         }
 
         // Available pendaftars strictly MUST be status TAGIHAN, without tagihans in current cycle, matching active jenjang, and matching the determined tagihanType
-        $availablePendaftars = Pendaftar::where('status', PendaftarStatus::Tagihan)
+        $availablePendaftars = Pendaftar::accessibleBy()
+            ->where('status', PendaftarStatus::Tagihan)
             ->where(function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('is_interview_ulang', false)->orWhereNull('is_interview_ulang');
@@ -544,6 +546,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function showDetail(Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(Auth::user())) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat data calon santri ini.');
+        }
+
         $pendaftar->load([
             'cabang',
             'jenjang',
@@ -557,7 +563,6 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                     'pembayarans' => function ($pq) {
                         $pq->latest('created_at')->with(['bank', 'verifier', 'creator']);
                     },
-                    'creator',
                 ]);
             },
         ]);

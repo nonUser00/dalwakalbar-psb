@@ -80,6 +80,10 @@ class PendaftarController extends Controller implements HasMiddleware
 
     public function show(Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(Auth::user())) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat data calon santri ini.');
+        }
+
         $pendaftar->load([
             'cabang',
             'jenjang',
@@ -100,14 +104,18 @@ class PendaftarController extends Controller implements HasMiddleware
 
     public function cetakKartu(Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(Auth::user())) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mencetak kartu calon santri ini.');
+        }
+
         $pendaftar->load([
             'cabang',
             'jenjang',
             'periode.tahunAkademik',
             'gelombang',
             'dokumens.dokumen',
-            'kelompokUjians.pengujis',
-            'kelompokUjians.koordinator',
+            'virtualAccounts.bank',
+            'tagihans.pembayarans',
         ]);
 
         return Inertia::render('Admin/Pendaftar/CetakKartu', [

@@ -3184,7 +3184,7 @@ const getUserPhoto = (user: any): string | null => {
                                     type="text"
                                     v-model="candidateSearch"
                                     placeholder="Cari data..."
-                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20"
+                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                                 />
                             </div>
 
@@ -3591,7 +3591,7 @@ const getUserPhoto = (user: any): string | null => {
                                     type="text"
                                     v-model="roleUserSearch"
                                     placeholder="Cari data..."
-                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20"
+                                    class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2 pr-3 pl-8.5 text-xs font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                                 />
                             </div>
                         </div>
@@ -3625,7 +3625,7 @@ const getUserPhoto = (user: any): string | null => {
                                 <tr
                                     v-for="row in paginatedModalStaff"
                                     :key="'modal-pegawai-' + row.id"
-                                    class="group cursor-pointer bg-white transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/50"
+                                    class="group cursor-pointer bg-white transition-colors hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800/50"
                                     :class="{
                                         'bg-primary/5 hover:bg-primary/10 dark:bg-primary/15':
                                             selectedRoleUsersToAdd.includes(

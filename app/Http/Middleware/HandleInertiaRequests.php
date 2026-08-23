@@ -56,7 +56,7 @@ class HandleInertiaRequests extends Middleware
             'sidebar_badges' => function () use ($request) {
                 if ($pendaftar = $request->user('pendaftar')) {
                     // PSB Sidebar Badges for logged-in candidate
-                    $pendaftar->loadMissing(['dokumens']);
+                    $pendaftar->loadMissing(['dokumens', 'tagihans', 'kelompokUjians']);
                     $hasPersonalRevision = ! empty($pendaftar->personal_data['catatan_personal']) || ! empty($pendaftar->personal_data['catatan_revisi']);
                     $hasParentRevision = ! empty($pendaftar->parent_data['catatan_parent']);
                     $hasAddressRevision = ! empty($pendaftar->address_data['catatan_address']);
@@ -68,17 +68,31 @@ class HandleInertiaRequests extends Middleware
                         + ($hasEducationRevision ? 1 : 0);
 
                     $dokumenRevisionCount = $pendaftar->dokumens
-                        ->where(function ($d) {
+                        ->filter(function ($d) {
                             $statusVal = $d->status instanceof StatusDokumen ? $d->status->value : (string) $d->status;
 
                             return ! empty($d->catatan) || in_array(strtoupper($statusVal), ['REJECTED', 'DITOLAK']);
                         })
                         ->count();
 
+                    // Jumlah tagihan yang belum lunas (aktif)
+                    $unpaidTagihanCount = $pendaftar->tagihans
+                        ->filter(function ($t) {
+                            $statusVal = $t->status instanceof StatusTagihan ? $t->status->value : (string) $t->status;
+
+                            return in_array(strtoupper($statusVal), ['BELUM_BAYAR', 'BELUM_LUNAS', 'UNPAID', 'PARTIAL']);
+                        })
+                        ->count();
+
+                    // Sesi interview yang terjadwal
+                    $jadwalInterviewCount = $pendaftar->kelompokUjians->count();
+
                     return [
                         'psb_formulir' => $biodataRevisionCount + $dokumenRevisionCount,
                         'psb_biodata' => $biodataRevisionCount,
                         'psb_dokumen' => $dokumenRevisionCount,
+                        'psb_tagihan' => $unpaidTagihanCount,
+                        'psb_jadwal' => $jadwalInterviewCount,
                     ];
                 }
 
@@ -86,18 +100,21 @@ class HandleInertiaRequests extends Middleware
                     return [];
                 }
 
-                return Cache::remember('admin_sidebar_badges', 5, function () {
+                return Cache::remember('admin_sidebar_badges_'.($request->user()?->id ?? 'guest'), 5, function () use ($request) {
                     try {
+                        $user = $request->user();
                         $activeTA = TahunAkademik::where('is_active', true)->first();
                         $taId = $activeTA?->id;
 
                         // 1. Pendaftar Submit (perlu diverifikasi)
-                        $submitCount = Pendaftar::where('status', PendaftarStatus::Submitted)
+                        $submitCount = Pendaftar::accessibleBy($user)
+                            ->where('status', PendaftarStatus::Submitted)
                             ->when($taId, fn ($q) => $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $taId)))
                             ->count();
 
                         // 2. Pendaftar Tagihan (belum dibuat tagihan + menunggu verifikasi)
-                        $tagihanBelumDibuat = Pendaftar::where('status', PendaftarStatus::Tagihan)
+                        $tagihanBelumDibuat = Pendaftar::accessibleBy($user)
+                            ->where('status', PendaftarStatus::Tagihan)
                             ->when($taId, fn ($q) => $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $taId)))
                             ->where(function ($q) {
                                 $q->where(function ($sq) {
@@ -111,7 +128,8 @@ class HandleInertiaRequests extends Middleware
                             })
                             ->count();
 
-                        $tagihanPerluVerifikasi = Pendaftar::where('status', PendaftarStatus::Tagihan)
+                        $tagihanPerluVerifikasi = Pendaftar::accessibleBy($user)
+                            ->where('status', PendaftarStatus::Tagihan)
                             ->when($taId, fn ($q) => $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $taId)))
                             ->whereHas('tagihans.pembayarans', fn ($q) => $q->where('status', StatusPembayaran::MenungguVerifikasi->value))
                             ->count();
@@ -119,7 +137,8 @@ class HandleInertiaRequests extends Middleware
                         $tagihanCount = $tagihanBelumDibuat + $tagihanPerluVerifikasi;
 
                         // 3. Set Interview (belum dijadwalkan / antrean)
-                        $setInterviewCount = Pendaftar::where('status', PendaftarStatus::Interview)
+                        $setInterviewCount = Pendaftar::accessibleBy($user)
+                            ->where('status', PendaftarStatus::Interview)
                             ->when($taId, fn ($q) => $q->whereHas('periode', fn ($pq) => $pq->where('tahun_akademik_id', $taId)))
                             ->where(function ($q) {
                                 $q->where(function ($sq) {
@@ -133,7 +152,7 @@ class HandleInertiaRequests extends Middleware
                             })
                             ->count();
 
-                        // 4. Penilaian Interview (jumlah kelompok yang dalam masa jadwal)
+                        // 4. Penilaian Interview (jumlah kelompok yang dalam masa jadwal - tidak terpengaruh filter izin pendaftar)
                         $penilaianInterviewCount = KelompokUjian::whereIn('status', [
                             StatusKelompokUjian::Scheduled,
                             StatusKelompokUjian::InProgress,

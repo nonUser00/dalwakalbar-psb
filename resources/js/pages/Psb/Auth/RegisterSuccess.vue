@@ -32,10 +32,6 @@ const copyNomorPendaftaran = async () => {
         console.error('Gagal menyalin:', err);
     }
 };
-
-const handlePrint = () => {
-    window.print();
-};
 </script>
 
 <template>
@@ -305,10 +301,10 @@ const handlePrint = () => {
                         </div>
 
                         <!-- Actions -->
-                        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <div class="mt-8">
                             <Link
                                 :href="dashboard.url()"
-                                class="inline-flex flex-1 items-center justify-center rounded-full bg-primary px-8 py-4 text-[15px] font-bold text-white shadow-[0_8px_30px_rgb(39,59,94,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-[0_8px_30px_rgb(39,59,94,0.4)]"
+                                class="inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 text-[15px] font-bold text-white shadow-[0_8px_30px_rgb(39,59,94,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-dark hover:shadow-[0_8px_30px_rgb(39,59,94,0.4)]"
                             >
                                 <span>Lengkapi Biodata Sekarang</span>
                                 <svg
@@ -325,27 +321,6 @@ const handlePrint = () => {
                                     />
                                 </svg>
                             </Link>
-
-                            <button
-                                type="button"
-                                @click="handlePrint"
-                                class="inline-flex items-center justify-center rounded-full border border-neutral-warm/30 bg-white px-6 py-4 text-[15px] font-bold text-primary-dark transition-all duration-300 hover:border-primary hover:bg-surface/20"
-                            >
-                                <svg
-                                    class="mr-2 h-5 w-5 text-neutral-warm"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                                    />
-                                </svg>
-                                <span>Cetak Bukti</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -353,11 +328,3 @@ const handlePrint = () => {
         </transition>
     </div>
 </template>
-
-<style scoped>
-@media print {
-    body {
-        background: white !important;
-    }
-}
-</style>

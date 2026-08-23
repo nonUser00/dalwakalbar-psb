@@ -57,8 +57,11 @@ class AuthController extends Controller
                 ->withProperties([
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
+                    'nama' => $pendaftar->nama,
+                    'nomor_pendaftaran' => $pendaftar->nomor_pendaftaran,
+                    'nik' => $pendaftar->nik,
                 ])
-                ->log('Pendaftar berhasil login');
+                ->log("Pendaftar {$pendaftar->nama} ({$pendaftar->nomor_pendaftaran}) berhasil login");
 
             $intendedUrl = $request->session()->pull('url.intended');
             if ($intendedUrl && str_starts_with(parse_url($intendedUrl, PHP_URL_PATH) ?? '', '/psb') && ! str_contains($intendedUrl, '/psb/login') && ! str_contains($intendedUrl, '/psb/register')) {
@@ -84,8 +87,11 @@ class AuthController extends Controller
                 ->withProperties([
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
+                    'nama' => $user->nama,
+                    'nomor_pendaftaran' => $user->nomor_pendaftaran,
+                    'nik' => $user->nik,
                 ])
-                ->log('Pendaftar berhasil logout');
+                ->log("Pendaftar {$user->nama} ({$user->nomor_pendaftaran}) berhasil logout");
         }
 
         Auth::guard('pendaftar')->logout();

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import DataTable from '@/Components/DataTable.vue';
 import ActionMenu from '@/Components/Form/ActionMenu.vue';
+import CustomDatePicker from '@/Components/Form/CustomDatePicker.vue';
 import CustomSelect from '@/Components/Form/CustomSelect.vue';
 import FilterModal from '@/Components/Form/FilterModal.vue';
 import PsbLayout from '@/Layouts/PsbLayout.vue';
@@ -24,6 +25,10 @@ const props = defineProps<{
     filters: {
         search?: string;
         status?: string;
+        kategori?: string;
+        due_status?: string;
+        start_date?: string;
+        end_date?: string;
         limit?: number;
     };
 }>();
@@ -73,7 +78,7 @@ const isOverdue = (tagihan: any) => {
     return due < now;
 };
 
-// Kolom DataTable (tanpa kolom actions karena DataTable sudah menyediakan slot #row-actions)
+// Kolom DataTable
 const columns = [
     { key: 'invoice', label: 'No. Invoice & Tagihan' },
     { key: 'due_date', label: 'Jatuh Tempo' },
@@ -123,6 +128,29 @@ const onLimitChange = (newLimit: number) => {
 const isFilterModalOpen = ref(false);
 const filterForm = ref({
     status: props.filters.status || '',
+    kategori: props.filters.kategori || '',
+    due_status: props.filters.due_status || '',
+    start_date: props.filters.start_date || '',
+    end_date: props.filters.end_date || '',
+});
+
+const isFilterActive = computed(() => {
+    return Boolean(
+        props.filters.status ||
+        props.filters.kategori ||
+        props.filters.due_status ||
+        props.filters.start_date ||
+        props.filters.end_date,
+    );
+});
+
+const activeFiltersCount = computed(() => {
+    let count = 0;
+    if (props.filters.status) count++;
+    if (props.filters.kategori) count++;
+    if (props.filters.due_status) count++;
+    if (props.filters.start_date || props.filters.end_date) count++;
+    return count;
 });
 
 const applyFilters = () => {
@@ -132,6 +160,10 @@ const applyFilters = () => {
         {
             ...props.filters,
             status: filterForm.value.status,
+            kategori: filterForm.value.kategori,
+            due_status: filterForm.value.due_status,
+            start_date: filterForm.value.start_date,
+            end_date: filterForm.value.end_date,
             page: 1,
         },
         {
@@ -144,6 +176,10 @@ const applyFilters = () => {
 
 const resetFilters = () => {
     filterForm.value.status = '';
+    filterForm.value.kategori = '';
+    filterForm.value.due_status = '';
+    filterForm.value.start_date = '';
+    filterForm.value.end_date = '';
     applyFilters();
 };
 </script>
@@ -164,7 +200,7 @@ const resetFilters = () => {
             </div>
         </div>
 
-        <!-- DataTable Wrapper 100% Identik dengan Admin Submit -->
+        <!-- DataTable Wrapper -->
         <div class="mt-6">
             <DataTable
                 :columns="columns"
@@ -178,12 +214,24 @@ const resetFilters = () => {
                         <button
                             type="button"
                             @click="isFilterModalOpen = true"
-                            class="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            class="group inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg
+                                class="h-4 w-4 text-gray-400 transition-colors group-hover:text-primary dark:text-slate-400 dark:group-hover:text-blue-400"
+                                :class="{ 'text-primary dark:text-blue-400': isFilterActive }"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
                             <span class="ml-2 hidden sm:inline">Filter</span>
+                            <span
+                                v-if="isFilterActive"
+                                class="ml-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white dark:bg-blue-600"
+                            >
+                                {{ activeFiltersCount }}
+                            </span>
                         </button>
                     </div>
 
@@ -191,13 +239,14 @@ const resetFilters = () => {
                     <FilterModal
                         :show="isFilterModalOpen"
                         title="Filter Data Tagihan"
-                        description="Saring data tagihan berdasarkan status pembayaran"
+                        description="Saring data tagihan berdasarkan status, kategori biaya, jatuh tempo, atau rentang tanggal pembuatan"
                         max-width="md"
                         @close="isFilterModalOpen = false"
                         @reset="resetFilters"
                         @apply="applyFilters"
                     >
                         <div class="space-y-4">
+                            <!-- Status Tagihan -->
                             <div>
                                 <label class="mb-2 block text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400">
                                     Status Tagihan / Pelunasan
@@ -208,11 +257,62 @@ const resetFilters = () => {
                                         { value: '', label: 'Semua Status' },
                                         { value: 'BELUM_BAYAR', label: 'Belum Bayar' },
                                         { value: 'BELUM_LUNAS', label: 'Belum Lunas' },
-                                        { value: 'LUNAS', label: 'Lunas' },
                                         { value: 'overdue', label: 'Tunggakan (Lewat Jatuh Tempo)' },
                                     ]"
                                     placeholder="Pilih Status"
                                 />
+                            </div>
+
+                            <!-- Kategori Tagihan -->
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400">
+                                    Kategori Biaya
+                                </label>
+                                <CustomSelect
+                                    v-model="filterForm.kategori"
+                                    :options="[
+                                        { value: '', label: 'Semua Kategori' },
+                                        { value: 'pendaftaran', label: 'Biaya Pendaftaran / Daftar Ulang' },
+                                        { value: 'rombongan', label: 'Biaya Rombongan Keberangkatan' },
+                                        { value: 'interview', label: 'Biaya Ujian / Seleksi Interview' },
+                                        { value: 'lainnya', label: 'Biaya Lainnya / SPP' },
+                                    ]"
+                                    placeholder="Pilih Kategori"
+                                />
+                            </div>
+
+                            <!-- Status Jatuh Tempo -->
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400">
+                                    Status Waktu Jatuh Tempo
+                                </label>
+                                <CustomSelect
+                                    v-model="filterForm.due_status"
+                                    :options="[
+                                        { value: '', label: 'Semua Waktu' },
+                                        { value: 'upcoming', label: 'Masa Berlaku (Belum Jatuh Tempo)' },
+                                        { value: 'today', label: 'Jatuh Tempo Hari Ini' },
+                                        { value: 'overdue', label: 'Lewat Jatuh Tempo (Tunggakan)' },
+                                    ]"
+                                    placeholder="Pilih Status Jatuh Tempo"
+                                />
+                            </div>
+
+                            <!-- Rentang Tanggal Terbit Tagihan -->
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400">
+                                    Rentang Tanggal Pembuatan Tagihan
+                                </label>
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <span class="mb-1 block text-[11px] font-medium text-gray-400 dark:text-slate-500">Dari Tanggal</span>
+                                        <CustomDatePicker v-model="filterForm.start_date" />
+                                    </div>
+                                    <div>
+                                        <span class="mb-1 block text-[11px] font-medium text-gray-400 dark:text-slate-500">Sampai Tanggal</span>
+                                        <CustomDatePicker v-model="filterForm.end_date" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </FilterModal>

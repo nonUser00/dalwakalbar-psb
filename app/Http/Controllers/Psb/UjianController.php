@@ -67,13 +67,29 @@ class UjianController extends Controller
             'jenjang',
             'periode',
             'gelombang',
+            'kelompokUjians',
             'hasilUjian',
             'penilaians.aspek',
         ]);
 
+        $kontakWa = Setting::where('key', 'kontak_darurat_wa')->value('value') ?? '081234567890';
+        $namaContact = Setting::where('key', 'nama_contact')->value('value') ?? 'Panitia PSB Dalwa Kalbar';
+        $jamMulai = Setting::where('key', 'jam_kerja_mulai')->value('value') ?? '08:00';
+        $jamSelesai = Setting::where('key', 'jam_kerja_selesai')->value('value') ?? '17:00';
+        $rawHariKerja = Setting::where('key', 'hari_kerja')->value('value');
+        $hariKerja = is_array($rawHariKerja) ? $rawHariKerja : (json_decode($rawHariKerja ?? '[]', true) ?: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
+
         return Inertia::render('Psb/Ujian/Pengumuman', [
             'pendaftar' => $pendaftar,
+            'kelompokUjians' => $pendaftar->kelompokUjians,
             'hasilUjian' => $pendaftar->hasilUjian,
+            'kontak' => [
+                'wa' => $kontakWa,
+                'nama' => $namaContact,
+                'hari_kerja' => $hariKerja,
+                'jam_mulai' => $jamMulai,
+                'jam_selesai' => $jamSelesai,
+            ],
         ]);
     }
 }

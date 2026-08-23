@@ -27,10 +27,14 @@ class KeuanganController extends Controller
 
         $search = $request->input('search');
         $status = $request->input('status');
+        $kategori = $request->input('kategori');
+        $dueStatus = $request->input('due_status');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
         $limit = $request->input('limit', 10);
 
         // Active tagihan (hanya yang belum lunas/selesai)
-        $query = Tagihan::with(['items', 'pembayarans.bank'])
+        $query = Tagihan::with(['items.itemBiaya.kategoriBiaya', 'pembayarans.bank'])
             ->where('pendaftar_id', $pendaftar->id)
             ->whereNotIn('status', ['PAID', 'LUNAS', 'SAMAHA']);
 
@@ -53,6 +57,30 @@ class KeuanganController extends Controller
             }
         }
 
+        if ($kategori) {
+            $query->whereHas('items.itemBiaya.kategoriBiaya', function ($kq) use ($kategori) {
+                $kq->where('jenis', $kategori);
+            });
+        }
+
+        if ($dueStatus) {
+            if ($dueStatus === 'overdue') {
+                $query->whereNotNull('due_date')->where('due_date', '<', now());
+            } elseif ($dueStatus === 'today') {
+                $query->whereDate('due_date', now());
+            } elseif ($dueStatus === 'upcoming') {
+                $query->whereNotNull('due_date')->where('due_date', '>', now());
+            }
+        }
+
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
         $tagihans = $query->orderBy('created_at', 'desc')->paginate($limit)->withQueryString();
 
         return Inertia::render('Psb/Keuangan/Tagihan', [
@@ -61,6 +89,10 @@ class KeuanganController extends Controller
             'filters' => [
                 'search' => (string) ($search ?? ''),
                 'status' => (string) ($status ?? ''),
+                'kategori' => (string) ($kategori ?? ''),
+                'due_status' => (string) ($dueStatus ?? ''),
+                'start_date' => (string) ($startDate ?? ''),
+                'end_date' => (string) ($endDate ?? ''),
                 'limit' => (int) $limit,
             ],
         ]);

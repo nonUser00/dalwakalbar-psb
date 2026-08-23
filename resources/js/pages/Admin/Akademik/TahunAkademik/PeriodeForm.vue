@@ -380,7 +380,7 @@ const submitForm = () => {
                         <button
                             type="button"
                             @click="toggleAllJenjang"
-                            class="cursor-pointer rounded-xl border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold text-primary shadow-xs transition-all hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-blue-400 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                            class="cursor-pointer rounded-xl border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold text-primary shadow-xs transition-all hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-slate-700"
                         >
                             Pilih Semua
                         </button>
@@ -396,7 +396,7 @@ const submitForm = () => {
                             class="flex flex-col justify-between space-y-4 rounded-2xl border p-5 transition-all duration-200"
                             :class="
                                 item.is_selected
-                                    ? 'border-primary/40 bg-white shadow-xs ring-1 ring-primary/10 dark:border-blue-500/50 dark:bg-slate-800 dark:bg-slate-900 dark:ring-blue-500/20'
+                                    ? 'border-primary/40 bg-white shadow-xs ring-1 ring-primary/10 dark:border-blue-500/50 dark:bg-slate-800 dark:ring-blue-500/20'
                                     : 'border-gray-200 bg-gray-50 opacity-65 dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800/70 dark:bg-slate-900/50'
                             "
                         >

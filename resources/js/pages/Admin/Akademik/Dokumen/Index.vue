@@ -23,7 +23,7 @@ interface JenjangItem {
 interface DokumenItem {
     id: string;
     name: string;
-    type: 'gambar' | 'pdf';
+    type: 'gambar' | 'pdf' | 'semua';
     jalur_pendaftaran: string;
     is_required: boolean;
     is_profile_photo: boolean;
@@ -121,18 +121,18 @@ const showDeleteModal = ref(false);
 const form = useForm({
     id: '',
     name: '',
-    type: 'pdf',
+    type: 'semua' as 'gambar' | 'pdf' | 'semua',
     jalur_pendaftaran: 'Semua',
     is_required: true,
     is_profile_photo: false,
     jenjang_ids: [] as string[],
 });
 
-// Otomatis uncheck foto profil jika tipe diubah ke PDF
+// Otomatis uncheck foto profil jika tipe diubah ke PDF murni
 watch(
     () => form.type,
     (newType) => {
-        if (newType !== 'gambar') {
+        if (newType === 'pdf') {
             form.is_profile_photo = false;
         }
     },
@@ -306,7 +306,9 @@ const deleteItem = () => {
                     :class="
                         row.type === 'gambar'
                             ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-400'
-                            : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400'
+                            : row.type === 'semua'
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/50 dark:text-emerald-400'
+                              : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-400'
                     "
                 >
                     <svg
@@ -324,6 +326,20 @@ const deleteItem = () => {
                         />
                     </svg>
                     <svg
+                        v-else-if="row.type === 'semua'"
+                        class="h-3.5 w-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                    </svg>
+                    <svg
                         v-else
                         class="h-3.5 w-3.5"
                         fill="none"
@@ -337,7 +353,13 @@ const deleteItem = () => {
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                     </svg>
-                    {{ row.type === 'gambar' ? 'Gambar (JPG/PNG)' : 'PDF' }}
+                    {{
+                        row.type === 'gambar'
+                            ? 'Gambar (JPG/PNG)'
+                            : row.type === 'semua'
+                              ? 'Dokumen & Gambar'
+                              : 'Dokumen (PDF)'
+                    }}
                 </span>
             </template>
 
@@ -507,8 +529,9 @@ const deleteItem = () => {
                         label="Jenis File Dokumen *"
                         v-model="form.type"
                         :options="[
-                            { value: 'gambar', label: 'Gambar (JPG, PNG)' },
-                            { value: 'pdf', label: 'Dokumen (PDF)' },
+                            { value: 'semua', label: 'Dokumen & Gambar (PDF, JPG, PNG)' },
+                            { value: 'gambar', label: 'Hanya Gambar (JPG, PNG)' },
+                            { value: 'pdf', label: 'Hanya Dokumen (PDF)' },
                         ]"
                         :error="form.errors.type"
                         required
@@ -562,13 +585,13 @@ const deleteItem = () => {
                                     (val: boolean) =>
                                         (form.is_profile_photo = val)
                                 "
-                                :disabled="form.type !== 'gambar'"
+                                :disabled="form.type === 'pdf'"
                             />
                             <div class="flex flex-col">
                                 <span
                                     class="text-xs font-bold text-gray-900 dark:text-slate-100"
                                     :class="{
-                                        'opacity-50': form.type !== 'gambar',
+                                        'opacity-50': form.type === 'pdf',
                                     }"
                                 >
                                     Jadikan Foto Profil
@@ -577,9 +600,9 @@ const deleteItem = () => {
                                     class="text-[11px] text-gray-500 dark:text-slate-400"
                                 >
                                     {{
-                                        form.type === 'gambar'
+                                        form.type !== 'pdf'
                                             ? 'Foto ini dipakai sebagai avatar santri'
-                                            : 'Hanya aktif untuk jenis Gambar'
+                                            : 'Tidak aktif untuk jenis Hanya PDF'
                                     }}
                                 </span>
                             </div>
@@ -618,7 +641,7 @@ const deleteItem = () => {
                             :class="
                                 isJenjangSelected(j.id)
                                     ? 'border-primary/40 bg-primary/5 font-bold text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-400'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-800'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
                             "
                         >
                             <Checkbox

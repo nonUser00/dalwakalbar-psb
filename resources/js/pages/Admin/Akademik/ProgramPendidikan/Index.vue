@@ -651,7 +651,7 @@ const executeDelete = () => {
                                 :class="[
                                     activeJenjangId === j.id
                                         ? 'border-primary bg-primary text-white shadow-lg ring-2 shadow-primary/20 ring-primary/30 dark:bg-blue-600 dark:shadow-blue-500/20'
-                                        : 'border-gray-200 bg-white text-gray-800 hover:border-primary/50 hover:bg-primary/5 dark:border-slate-700/80 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800/50',
+                                        : 'border-gray-200 bg-white text-gray-800 hover:border-primary/50 hover:bg-primary/5 dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800/50',
                                 ]"
                             >
                                 <div class="flex items-center gap-3.5">

@@ -43,7 +43,7 @@ class DokumenController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:gambar,pdf',
+            'type' => 'required|string|in:gambar,pdf,semua',
             'jalur_pendaftaran' => 'required|string|in:Semua,Reguler,Pindahan',
             'is_required' => 'required|boolean',
             'is_profile_photo' => 'required|boolean',
@@ -51,8 +51,8 @@ class DokumenController extends Controller
             'jenjang_ids.*' => 'exists:jenjangs,id',
         ]);
 
-        // Aturan: Hanya dokumen jenis gambar yang bisa dijadikan foto profil
-        if ($validated['type'] !== 'gambar') {
+        // Aturan: Hanya dokumen yang mendukung gambar (gambar atau semua) yang bisa dijadikan foto profil
+        if (! in_array($validated['type'], ['gambar', 'semua'])) {
             $validated['is_profile_photo'] = false;
         }
 
@@ -92,7 +92,7 @@ class DokumenController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:gambar,pdf',
+            'type' => 'required|string|in:gambar,pdf,semua',
             'jalur_pendaftaran' => 'required|string|in:Semua,Reguler,Pindahan',
             'is_required' => 'required|boolean',
             'is_profile_photo' => 'required|boolean',
@@ -100,8 +100,8 @@ class DokumenController extends Controller
             'jenjang_ids.*' => 'exists:jenjangs,id',
         ]);
 
-        // Aturan: Hanya dokumen jenis gambar yang bisa dijadikan foto profil
-        if ($validated['type'] !== 'gambar') {
+        // Aturan: Hanya dokumen yang mendukung gambar (gambar atau semua) yang bisa dijadikan foto profil
+        if (! in_array($validated['type'], ['gambar', 'semua'])) {
             $validated['is_profile_photo'] = false;
         }
 

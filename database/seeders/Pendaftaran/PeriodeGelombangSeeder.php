@@ -30,7 +30,7 @@ class PeriodeGelombangSeeder extends Seeder
                     'kuota' => 500,
                     'jalur_pendaftaran' => 'Semua',
                     'start_date' => '2026-01-01',
-                    'end_date' => '2026-04-30',
+                    'end_date' => '2026-12-31',
                 ]
             );
 
@@ -50,7 +50,7 @@ class PeriodeGelombangSeeder extends Seeder
 
             Gelombang::firstOrCreate(
                 ['periode_id' => $periode1->id, 'name' => 'Gelombang 1 Utama'],
-                ['start_date' => '2026-01-01', 'end_date' => '2026-04-30']
+                ['start_date' => '2026-01-01', 'end_date' => '2026-12-31']
             );
 
             $periode2 = Periode::firstOrCreate(

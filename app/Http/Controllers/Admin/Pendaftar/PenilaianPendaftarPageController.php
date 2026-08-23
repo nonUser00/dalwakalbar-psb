@@ -73,7 +73,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
 
         // Master Jenjangs ordered (MTs, MA, S1, S2, S3)
         $jenjangOrder = ['MTS' => 1, 'MA' => 2, 'S1' => 3, 'S2' => 4, 'S3' => 5];
-        $allJenjangs = Jenjang::all()->sort(function ($a, $b) use ($jenjangOrder) {
+        $allJenjangs = Jenjang::get()->sort(function ($a, $b) use ($jenjangOrder) {
             $orderA = $jenjangOrder[strtoupper($a->code ?? $a->singkatan ?? '')] ?? 99;
             $orderB = $jenjangOrder[strtoupper($b->code ?? $b->singkatan ?? '')] ?? 99;
 
@@ -177,9 +177,11 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
                 ?? $gelombangsData->first();
 
             if ($matchingWave) {
-                $gelombangId = $matchingWave['id'];
+                $gelombangId = '';
             }
         }
+
+        $user = auth()->user();
 
         // Calculate Overall Assessment Metrics for Active Groups (strictly scoped to active academic year and selected wave)
         $activeKelompokQuery = KelompokUjian::whereIn('status', [
@@ -234,27 +236,28 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             ->whereHas('pendaftars', function ($pq) use ($tahunAkademikId, $gelombangId) {
                 $pq->whereHas('periode', fn ($perQ) => $perQ->where('tahun_akademik_id', $tahunAkademikId))
                     ->when($gelombangId, fn ($wQ) => $wQ->where('gelombang_id', $gelombangId));
-            })
-            ->with([
-                'pengujis:id,name,email',
-                'koordinator:id,name,email',
-                'pendaftars' => function ($pq) use ($tahunAkademikId, $gelombangId) {
-                    $pq->whereHas('periode', fn ($perQ) => $perQ->where('tahun_akademik_id', $tahunAkademikId))
-                        ->when($gelombangId, fn ($wQ) => $wQ->where('gelombang_id', $gelombangId))
-                        ->with([
-                            'cabang:id,name',
-                            'jenjang:id,code,name,singkatan,logo_path',
-                            'periode:id,name,tahun_akademik_id',
-                            'periode.tahunAkademik:id,name',
-                            'gelombang:id,name',
-                            'hasilUjian',
-                            'dokumens.dokumen',
-                            'penilaians.aspek:id,kategori_id,nama_aspek,bobot',
-                            'penilaians.aspek.kategori:id,nama_kategori',
-                            'penilaians.penguji:id,name',
-                        ]);
-                },
-            ])
+            });
+
+        $query->with([
+            'pengujis:id,name,email',
+            'koordinator:id,name,email',
+            'pendaftars' => function ($pq) use ($tahunAkademikId, $gelombangId) {
+                $pq->whereHas('periode', fn ($perQ) => $perQ->where('tahun_akademik_id', $tahunAkademikId))
+                    ->when($gelombangId, fn ($wQ) => $wQ->where('gelombang_id', $gelombangId))
+                    ->with([
+                        'cabang:id,name',
+                        'jenjang:id,code,name,singkatan,logo_path',
+                        'periode:id,name,tahun_akademik_id',
+                        'periode.tahunAkademik:id,name',
+                        'gelombang:id,name',
+                        'hasilUjian',
+                        'dokumens.dokumen',
+                        'penilaians.aspek:id,kategori_id,nama_aspek,bobot',
+                        'penilaians.aspek.kategori:id,nama_kategori',
+                        'penilaians.penguji:id,name',
+                    ]);
+            },
+        ])
             ->withCount(['pendaftars', 'penilaians']);
 
         // Filter: Jenjang
@@ -463,7 +466,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
         });
 
         // Lookup data
-        $cabangs = Cabang::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $pengujis = User::where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']);
         $koordinator = User::where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']);
 
@@ -512,6 +515,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function lockKelompok(KelompokUjian $kelompokUjian): RedirectResponse
     {
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk mengunci hasil ujian kelompok ini.');
+        }
+
         $kelompokUjian->load(['pendaftars.hasilUjian']);
 
         if ($kelompokUjian->pendaftars->isEmpty()) {
@@ -579,6 +590,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function unlockKelompok(KelompokUjian $kelompokUjian): RedirectResponse
     {
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk membuka kunci hasil ujian kelompok ini.');
+        }
+
         DB::transaction(function () use ($kelompokUjian) {
             $kelompokUjian->load('pendaftars.hasilUjian');
 
@@ -618,6 +637,16 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
         ]);
 
         $pendaftar = Pendaftar::with(['kelompokUjians', 'hasilUjian'])->findOrFail($request->input('pendaftar_id'));
+        $kelompokId = $request->input('kelompok_ujian_id') ?? $pendaftar->kelompokUjians->first()?->id;
+        $kelompokUjian = KelompokUjian::findOrFail($kelompokId);
+
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $isAssignedExaminer) {
+            return back()->with('error', 'Hanya penguji atau koordinator yang ditugaskan pada kelompok ujian ini yang dapat melakukan penilaian.');
+        }
 
         // Check if locked
         if ($pendaftar->hasilUjian && $pendaftar->hasilUjian->locked_at) {
@@ -667,6 +696,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function showWawancaraPage(Request $request, $kelompokUjianId, $pendaftarId)
     {
+        $user = auth()->user();
         $kelompokUjian = KelompokUjian::findOrFail($kelompokUjianId);
         $pendaftar = Pendaftar::with([
             'jenjang',
@@ -678,6 +708,13 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
                 $q->where('kelompok_ujian_id', $kelompokUjianId)->with('dataWawancara');
             },
         ])->findOrFail($pendaftarId);
+
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.view')) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat data wawancara calon santri ini.');
+        }
 
         $kopSuratPath = Setting::where('key', 'kop_surat_path')->value('value');
         $kopSuratUrl = $kopSuratPath ? Storage::url($kopSuratPath) : '/image/kop-surat.png';
@@ -747,6 +784,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'catatanFinal' => $catatanFinal,
             'activeStep' => $activeStep,
             'currentStep' => $dbStep,
+            'isAssignedExaminer' => $isAssignedExaminer,
             'backUrl' => route('admin.pendaftar.penilaian_interview.show_kelompok', $kelompokUjian->id),
         ]);
     }
@@ -764,6 +802,17 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'rekomendasi_kelas_pondok' => 'nullable|string|max:100',
             'catatan_final' => 'nullable|string',
         ]);
+
+        $user = auth()->user();
+        $kelompokUjian = KelompokUjian::findOrFail($request->input('kelompok_ujian_id'));
+        $pendaftar = Pendaftar::findOrFail($request->input('pendaftar_id'));
+
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $isAssignedExaminer) {
+            return back()->with('error', 'Hanya penguji atau koordinator yang ditugaskan pada kelompok ujian ini yang dapat mengisi/menyimpan formulir wawancara.');
+        }
 
         try {
             DB::beginTransaction();
@@ -878,6 +927,17 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'status_kelulusan' => 'nullable|string|in:lulus,tidak_lulus',
         ]);
 
+        $user = auth()->user();
+        $kelompokUjian = KelompokUjian::findOrFail($request->input('kelompok_ujian_id'));
+        $pendaftar = Pendaftar::findOrFail($request->input('pendaftar_id'));
+
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk menentukan kelulusan calon santri ini.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -945,6 +1005,17 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'catatan_final' => 'nullable|string',
         ]);
 
+        $user = auth()->user();
+        $kelompokUjian = KelompokUjian::findOrFail($request->input('kelompok_ujian_id'));
+        $pendaftar = Pendaftar::findOrFail($request->input('pendaftar_id'));
+
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk menentukan kelas pondok calon santri ini.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -990,6 +1061,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function showLembarTes(KelompokUjian $kelompokUjian, string $kategoriSlug, Request $request): Response
     {
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.view')) {
+            abort(403, 'Anda tidak memiliki hak akses untuk lembar tes kelompok ini.');
+        }
+
         $kelompokUjian = KelompokUjian::with([
             'pengujis' => function ($q) {
                 $q->select('users.id', 'users.name', 'users.email', 'users.nik', 'users.nip', 'users.foto')
@@ -1065,6 +1144,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'kategoriSlug' => $kategoriSlug,
             'pendaftars' => $kelompokUjian->pendaftars,
             'examiners' => $examiners,
+            'isAssignedExaminer' => $isAssignedExaminer,
             'backUrl' => route('admin.pendaftar.penilaian_interview.show_kelompok', $kelompokUjian->id),
         ]);
     }
@@ -1080,6 +1160,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'scores.*' => 'nullable|numeric|min:0|max:100',
             'catatan' => 'nullable|string',
         ]);
+
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $isAssignedExaminer) {
+            return back()->with('error', 'Hanya penguji atau koordinator yang ditugaskan pada kelompok ini yang dapat menyimpan nilai.');
+        }
 
         try {
             DB::beginTransaction();
@@ -1145,6 +1233,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'rows.*.scores' => 'required|array',
             'rows.*.catatan' => 'nullable|string',
         ]);
+
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $isAssignedExaminer) {
+            return back()->with('error', 'Hanya penguji atau koordinator yang ditugaskan pada kelompok ini yang dapat menyimpan nilai.');
+        }
 
         try {
             DB::beginTransaction();
@@ -1229,6 +1325,16 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             $q->where('kelompok_ujian_id', $kelompokId);
         }])->findOrFail($pendaftarId);
 
+        $user = auth()->user();
+        $isAssignedExaminer = $pendaftar->kelompokUjians()->where(function ($kq) use ($user) {
+            $kq->whereHas('pengujis', fn ($uq) => $uq->where('users.id', $user->id))
+                ->orWhereHas('koordinator', fn ($uq) => $uq->where('users.id', $user->id));
+        })->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk mengunci nilai calon santri ini.');
+        }
+
         $hasil = $pendaftar->hasilUjian;
 
         if (! $hasil) {
@@ -1303,8 +1409,18 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'kelompok_ujian_id' => 'required|string|exists:kelompok_ujians,id',
         ]);
 
-        $ids = $request->input('ids', []);
         $kelompokId = $request->input('kelompok_ujian_id');
+        $kelompok = KelompokUjian::findOrFail($kelompokId);
+
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompok->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompok->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk mengunci kelompok ini.');
+        }
+
+        $ids = $request->input('ids', []);
         $now = now();
         $authId = auth()->id();
 
@@ -1379,6 +1495,16 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             }
         }])->findOrFail($pendaftarId);
 
+        $user = auth()->user();
+        $isAssignedExaminer = $pendaftar->kelompokUjians()->where(function ($kq) use ($user) {
+            $kq->whereHas('pengujis', fn ($uq) => $uq->where('users.id', $user->id))
+                ->orWhereHas('koordinator', fn ($uq) => $uq->where('users.id', $user->id));
+        })->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk membuka kunci nilai calon santri ini.');
+        }
+
         DB::transaction(function () use ($pendaftar, $kelompokId) {
             if ($pendaftar->hasilUjian) {
                 $pendaftar->hasilUjian->update([
@@ -1411,6 +1537,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function spreadsheet(KelompokUjian $kelompokUjian): Response
     {
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.view')) {
+            abort(403, 'Anda tidak memiliki hak akses ke spreadsheet kelompok ini.');
+        }
+
         $kelompokUjian->load([
             'pendaftars' => function ($pq) {
                 $pq->with([
@@ -1443,6 +1577,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function cetakSuratHasil(string $pendaftarId)
     {
+        $user = auth()->user();
         $pendaftar = Pendaftar::with([
             'cabang',
             'jenjang',
@@ -1452,6 +1587,15 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             'hasilUjian',
             'penilaians.aspek.kategori',
         ])->findOrFail($pendaftarId);
+
+        $isAssignedExaminer = $pendaftar->kelompokUjians()->where(function ($kq) use ($user) {
+            $kq->whereHas('pengujis', fn ($uq) => $uq->where('users.id', $user->id))
+                ->orWhereHas('koordinator', fn ($uq) => $uq->where('users.id', $user->id));
+        })->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.view')) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mencetak surat hasil tes calon santri ini.');
+        }
 
         $hasilUjian = $pendaftar->hasilUjian;
 
@@ -1472,8 +1616,12 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
         $search = $request->input('search');
         $cabangId = $request->input('cabang_id');
         $periodeId = $request->input('periode_id');
+        $gelombangId = $request->input('gelombang_id');
+        $kelompokId = $request->input('kelompok_ujian_id');
         $activeTahunAkademik = TahunAkademik::where('is_active', true)->first();
         $tahunAkademikId = $activeTahunAkademik?->id;
+
+        $user = auth()->user();
 
         $query = Pendaftar::query()
             ->with([
@@ -1604,6 +1752,11 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
         ]);
 
         $pendaftar = Pendaftar::findOrFail($pendaftarId);
+        $user = auth()->user();
+        if (! $user->isSuperAdmin() && ! $user->can('pendaftar.edit')) {
+            return back()->with('error', 'Anda tidak memiliki hak akses untuk mereset password calon santri ini.');
+        }
+
         $pendaftar->update([
             'password' => Hash::make($request->input('password')),
         ]);
@@ -1616,6 +1769,14 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
      */
     public function showKelompok(KelompokUjian $kelompokUjian): Response
     {
+        $user = auth()->user();
+        $isAssignedExaminer = $kelompokUjian->pengujis()->where('users.id', $user->id)->exists()
+            || $kelompokUjian->koordinator()->where('users.id', $user->id)->exists();
+
+        if (! $user->isSuperAdmin() && ! $isAssignedExaminer && ! $user->can('ujian.penilaian.input') && ! $user->can('pendaftar.view')) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat kelompok interview ini.');
+        }
+
         $kelompokUjian = KelompokUjian::with([
             'pengujis',
             'koordinator',
@@ -1650,7 +1811,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             },
         ]);
 
-        $jenjangs = Jenjang::orderBy('created_at', 'asc')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('created_at', 'asc')->get();
 
         // Categorize examiners by role from pivot
         $pewawancaraList = $kelompokUjian->pengujis->where('pivot.peran', 'interview')->values();
@@ -1685,7 +1846,7 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
             }
         }
 
-        $cabangs = Cabang::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         $kategoriPenilaians = KategoriPenilaian::with([
             'aspek_penilaians' => function ($aq) {
@@ -1723,9 +1884,10 @@ class PenilaianPendaftarPageController extends Controller implements HasMiddlewa
                 'belum_dinilai_count' => max(0, $totalSantri - $dinilaiCount),
             ],
             'pendaftars' => $kelompokUjian->pendaftars,
-            'jenjangs' => $jenjangs,
-            'cabangs' => $cabangs,
+            'jenjangs' => Jenjang::orderBy('created_at', 'asc')->get(),
+            'cabangs' => Cabang::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'kategoriPenilaians' => $kategoriPenilaians,
+            'isAssignedExaminer' => $isAssignedExaminer,
         ]);
     }
 

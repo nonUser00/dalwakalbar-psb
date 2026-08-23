@@ -27,7 +27,7 @@ class DokumenController extends Controller
             ->paginate($limit)
             ->withQueryString();
 
-        $jenjangs = Jenjang::orderBy('name')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('name')->get();
 
         return Inertia::render('Admin/Akademik/Dokumen/Index', [
             'dokumens' => $dokumens,

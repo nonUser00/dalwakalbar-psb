@@ -26,17 +26,18 @@ class VirtualAccountController extends Controller
             ->orderBy('name')
             ->get();
 
-        $cabangs = Cabang::where('is_active', true)->orderBy('name')->pluck('name')->toArray();
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->orderBy('name')->pluck('name')->toArray();
         if (empty($cabangs)) {
             $cabangs = ['Kalimantan Barat', 'Kalimantan Timur'];
         }
 
-        $jenjangs = Jenjang::where('is_active', true)->orderBy('code')->pluck('name')->toArray();
+        $jenjangs = Jenjang::accessibleBy()->where('is_active', true)->orderBy('code')->pluck('name')->toArray();
         if (empty($jenjangs)) {
             $jenjangs = ['Madrasah Tsanawiyah', 'Madrasah Aliyah', 'Strata 1 (Sarjana)', 'Pasca Sarjana (Magister)', 'Doktor (S3)'];
         }
 
-        $allPendaftars = Pendaftar::with(['cabang', 'jenjang'])
+        $allPendaftars = Pendaftar::accessibleBy()
+            ->with(['cabang', 'jenjang'])
             ->orderBy('nama')
             ->get()
             ->map(function ($p) {
@@ -53,7 +54,7 @@ class VirtualAccountController extends Controller
                 ];
             });
 
-        $query = Pendaftar::with([
+        $query = Pendaftar::accessibleBy()->with([
             'virtualAccounts' => function ($q) {
                 $q->whereHas('bank', function ($b) {
                     $b->where('is_active', true);
@@ -264,17 +265,18 @@ class VirtualAccountController extends Controller
     {
         $banks = Bank::where('is_active', true)->orderBy('kode_bank')->orderBy('singkatan')->orderBy('name')->get();
 
-        $cabangs = Cabang::where('is_active', true)->orderBy('name')->pluck('name')->toArray();
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->orderBy('name')->pluck('name')->toArray();
         if (empty($cabangs)) {
             $cabangs = ['Kalimantan Barat', 'Kalimantan Timur'];
         }
 
-        $jenjangs = Jenjang::where('is_active', true)->orderBy('code')->pluck('name')->toArray();
+        $jenjangs = Jenjang::accessibleBy()->where('is_active', true)->orderBy('code')->pluck('name')->toArray();
         if (empty($jenjangs)) {
             $jenjangs = ['Madrasah Tsanawiyah', 'Madrasah Aliyah', 'Strata 1 (Sarjana)', 'Pasca Sarjana (Magister)', 'Doktor (S3)'];
         }
 
-        $pendaftars = Pendaftar::with(['cabang', 'jenjang'])
+        $pendaftars = Pendaftar::accessibleBy()
+            ->with(['cabang', 'jenjang'])
             ->whereNotNull('nik')
             ->get(['id', 'nik', 'nama', 'cabang_id', 'jenjang_id', 'personal_data', 'education_data'])
             ->map(function ($p) {

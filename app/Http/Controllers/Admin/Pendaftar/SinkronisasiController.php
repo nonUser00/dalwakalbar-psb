@@ -13,7 +13,7 @@ class SinkronisasiController extends Controller
     {
         // Hanya pendaftar yang lulus tes kesehatan dan belum di-sinkronisasi (is_santri = false)
         // Atau sudah is_santri tapi mau diedit
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status_kesehatan', 'LULUS');
 
         if ($request->search) {
@@ -34,6 +34,10 @@ class SinkronisasiController extends Controller
 
     public function sinkronisasi(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'nama_pondok' => 'required|string|max:255',
             'asrama' => 'required|string|max:255',

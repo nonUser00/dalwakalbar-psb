@@ -25,7 +25,7 @@ class ProfileController extends Controller
             'gelombang',
             'dokumens.dokumen',
             'virtualAccounts.bank',
-            'tagihans.tagihanItems',
+            'tagihans.items',
             'tagihans.pembayarans',
             'kelompokUjians.pengujis',
             'kelompokUjians.koordinator',

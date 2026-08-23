@@ -24,7 +24,11 @@ class TagihanPendaftarController extends Controller implements HasMiddleware
 
     public function show(Tagihan $tagihan)
     {
-        $tagihan->load(['pendaftar.program', 'pendaftar.gelombang', 'pembayarans.verifiedBy', 'pembayarans.creator', 'items']);
+        $tagihan->load(['pendaftar.jenjang', 'pendaftar.cabang', 'pendaftar.gelombang', 'pembayarans.verifiedBy', 'pembayarans.creator', 'items']);
+
+        if ($tagihan->pendaftar && ! $tagihan->pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
 
         return Inertia::render('Admin/Tagihan/Show', [
             'tagihan' => $tagihan,

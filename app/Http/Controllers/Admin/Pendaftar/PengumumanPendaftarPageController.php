@@ -60,7 +60,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
 
         // Master Jenjangs ordered
         $jenjangOrder = ['MTS' => 1, 'MA' => 2, 'S1' => 3, 'S2' => 4, 'S3' => 5];
-        $allJenjangs = Jenjang::all()->sort(function ($a, $b) use ($jenjangOrder) {
+        $allJenjangs = Jenjang::accessibleBy()->get()->sort(function ($a, $b) use ($jenjangOrder) {
             $orderA = $jenjangOrder[strtoupper($a->code ?? $a->singkatan ?? '')] ?? 99;
             $orderB = $jenjangOrder[strtoupper($b->code ?? $b->singkatan ?? '')] ?? 99;
 
@@ -85,7 +85,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
                 'jenjangCounts' => $badgeCounts,
                 'selectedJenjangId' => (string) ($selectedJenjangId ?? ''),
                 'kategoris' => collect(),
-                'cabangs' => Cabang::where('is_active', true)->select('id', 'name')->get(),
+                'cabangs' => Cabang::accessibleBy()->where('is_active', true)->select('id', 'name')->get(),
                 'activeTahunAkademik' => null,
                 'hasActiveTahunAkademik' => false,
                 'gelombangs' => [],
@@ -165,7 +165,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
                 ?? $gelombangsData->first();
 
             if ($matchingWave) {
-                $gelombangId = $matchingWave['id'];
+                $gelombangId = '';
             }
         }
 
@@ -302,7 +302,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
             $q->orderBy('urutan', 'asc')->orderBy('created_at', 'asc');
         }])->where('is_active', true)->get();
 
-        $cabangs = Cabang::where('is_active', true)->select('id', 'name')->get();
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->select('id', 'name')->get();
         $kelompokUjians = KelompokUjian::with('pengujis:id,name,email')->latest()->get();
 
         return Inertia::render('Admin/Pendaftar/Pengumuman/Index', [
@@ -341,6 +341,10 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
      */
     public function decide(Request $request, Pendaftar $pendaftar): RedirectResponse
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $request->validate([
             'status_kelulusan' => 'required|in:lulus,tidak_lulus',
             'catatan_final' => 'nullable|string|max:1500',
@@ -397,7 +401,14 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
             'catatan_final' => 'nullable|string|max:1500',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $request->ids)->get();
+        if ($pendaftars->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses.');
+        }
+
+        $validIds = $pendaftars->pluck('id')->toArray();
+
+        DB::transaction(function () use ($request, $validIds) {
             $statusKelulusan = $request->status_kelulusan;
             $pendaftarStatus = match ($statusKelulusan) {
                 'lulus' => PendaftarStatus::Lulus,
@@ -405,11 +416,11 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
                 default => PendaftarStatus::Interview,
             };
 
-            Pendaftar::whereIn('id', $request->ids)->update([
+            Pendaftar::whereIn('id', $validIds)->update([
                 'status' => $pendaftarStatus,
             ]);
 
-            foreach ($request->ids as $id) {
+            foreach ($validIds as $id) {
                 HasilUjian::updateOrCreate([
                     'pendaftar_id' => $id,
                 ], [
@@ -423,7 +434,7 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
                 ]);
             }
 
-            $count = count($request->ids);
+            $count = count($validIds);
             activity()
                 ->causedBy(auth()->user())
                 ->log("Menetapkan kelulusan massal ({$pendaftarStatus}) untuk {$count} calon santri.");
@@ -439,6 +450,10 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
      */
     public function reinterview(Request $request, Pendaftar $pendaftar): RedirectResponse
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         DB::transaction(function () use ($pendaftar) {
             $pendaftar->update([
                 'status' => PendaftarStatus::Tagihan,
@@ -465,6 +480,10 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
      */
     public function resetPassword(Request $request, Pendaftar $pendaftar): RedirectResponse
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -488,6 +507,10 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
      */
     public function destroy(Pendaftar $pendaftar): RedirectResponse
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         DB::transaction(function () use ($pendaftar) {
             $nama = $pendaftar->nama;
             $pendaftar->delete();
@@ -511,8 +534,17 @@ class PengumumanPendaftarPageController extends Controller implements HasMiddlew
             'ids.*' => 'exists:pendaftars,id',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $count = Pendaftar::whereIn('id', $request->ids)->delete();
+        $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $request->ids)->get();
+
+        if ($pendaftars->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses untuk dihapus.');
+        }
+
+        $idsToDelete = $pendaftars->pluck('id')->toArray();
+        $count = count($idsToDelete);
+
+        DB::transaction(function () use ($idsToDelete, $count) {
+            Pendaftar::whereIn('id', $idsToDelete)->delete();
 
             activity()
                 ->causedBy(auth()->user())

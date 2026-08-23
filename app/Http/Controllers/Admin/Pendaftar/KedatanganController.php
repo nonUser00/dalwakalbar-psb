@@ -12,13 +12,14 @@ class KedatanganController extends Controller
     public function index(Request $request)
     {
         // Pendaftar yang minimal punya keberangkatan (sudah lapor berangkat/rombongan)
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->with(['keberangkatan.rombongan'])
-            ->whereHas('kelulusan', function ($q) {
-                $q->where('status_kelulusan', 'LULUS'); // Asumsi menggunakan kelulusan, atau bisa cek join ke hasil_ujians / langsung
-            })
-            ->orWhereHas('hasil_ujian', function ($q) {
-                $q->where('status_kelulusan', 'LULUS');
+            ->where(function ($q) {
+                $q->whereHas('kelulusan', function ($sq) {
+                    $sq->where('status_kelulusan', 'LULUS');
+                })->orWhereHas('hasil_ujian', function ($sq) {
+                    $sq->where('status_kelulusan', 'LULUS');
+                });
             });
 
         // Search filter
@@ -40,6 +41,10 @@ class KedatanganController extends Controller
 
     public function updateKesehatan(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'status_kesehatan' => 'required|in:PROSES,LULUS,GAGAL',
             'catatan_kesehatan' => 'nullable|string',

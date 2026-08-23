@@ -45,8 +45,8 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
-        // All active Jenjangs ordered (MTs, MA, S1, S2, S3)
-        $jenjangs = Jenjang::orderBy('created_at', 'asc')->get();
+        // All active Jenjangs accessible by user ordered (MTs, MA, S1, S2, S3)
+        $jenjangs = Jenjang::accessibleBy()->orderBy('created_at', 'asc')->get();
 
         // Selected active jenjang (empty by default to show all data across jenjangs)
         $selectedJenjangId = $request->query('jenjang_id');
@@ -66,7 +66,7 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
                 'jenjangs' => $jenjangs,
                 'jenjangCounts' => $badgeCounts,
                 'selectedJenjangId' => (string) ($selectedJenjangId ?? ''),
-                'cabangs' => Cabang::orderBy('name')->get(),
+                'cabangs' => Cabang::accessibleBy()->orderBy('name')->get(),
                 'activeTahunAkademik' => null,
                 'hasActiveTahunAkademik' => false,
                 'gelombangs' => [],
@@ -140,7 +140,7 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
                 ?? $gelombangsData->first();
 
             if ($matchingWave) {
-                $gelombangId = $matchingWave['id'];
+                $gelombangId = '';
             }
         }
 
@@ -212,7 +212,7 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
         $pendaftars = $query->latest('submitted_at')->latest('created_at')->paginate($limit)->withQueryString();
 
         // Master options for filters
-        $cabangs = Cabang::orderBy('name')->get();
+        $cabangs = Cabang::accessibleBy()->orderBy('name')->get();
         $masterDokumens = Dokumen::with('jenjangs:id,name,code,singkatan')->get();
 
         return Inertia::render('Admin/Pendaftar/Submit/Index', [
@@ -245,6 +245,10 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
 
     public function verify(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'action' => 'required|in:terima,tolak',
             'catatan_personal' => 'nullable|string|max:1000',
@@ -359,11 +363,16 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
             'action' => 'required|in:terima',
         ]);
 
-        $count = count($validated['ids']);
+        $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $validated['ids'])->get();
 
-        DB::transaction(function () use ($validated, $request, $count) {
-            $pendaftars = Pendaftar::whereIn('id', $validated['ids'])->get();
+        if ($pendaftars->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses untuk diverifikasi.');
+        }
 
+        $count = $pendaftars->count();
+        $idsToVerify = $pendaftars->pluck('id')->toArray();
+
+        DB::transaction(function () use ($pendaftars, $request, $count, $idsToVerify) {
             foreach ($pendaftars as $p) {
                 $p->update([
                     'status' => 'TAGIHAN',
@@ -378,7 +387,7 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
                     'user_agent' => $request->userAgent(),
                     'action' => 'terima',
                     'count' => $count,
-                    'ids' => $validated['ids'],
+                    'ids' => $idsToVerify,
                 ])
                 ->log("Melakukan verifikasi terima massal terhadap {$count} data pendaftar submit.");
         });
@@ -390,6 +399,10 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
 
     public function resetPassword(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ], [
@@ -419,6 +432,10 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
 
     public function destroy(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $oldData = $pendaftar->toArray();
 
         DB::transaction(function () use ($pendaftar, $request, $oldData) {
@@ -446,12 +463,17 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
             'ids.*' => 'required|string',
         ]);
 
-        $count = count($validated['ids']);
+        $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $validated['ids'])->get();
 
-        DB::transaction(function () use ($validated, $request) {
-            $pendaftars = Pendaftar::whereIn('id', $validated['ids'])->get();
+        if ($pendaftars->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses untuk dihapus.');
+        }
 
-            Pendaftar::whereIn('id', $validated['ids'])->delete();
+        $count = $pendaftars->count();
+        $idsToDelete = $pendaftars->pluck('id')->toArray();
+
+        DB::transaction(function () use ($idsToDelete, $request, $count) {
+            Pendaftar::whereIn('id', $idsToDelete)->delete();
 
             activity()
                 ->useLog('Pendaftar Submit')
@@ -459,10 +481,10 @@ class SubmitPendaftarController extends Controller implements HasMiddleware
                 ->withProperties([
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
-                    'count' => count($validated['ids']),
-                    'ids' => $validated['ids'],
+                    'count' => $count,
+                    'ids' => $idsToDelete,
                 ])
-                ->log("Menghapus massal {$pendaftars->count()} data pendaftar submit.");
+                ->log("Menghapus massal {$count} data pendaftar submit.");
         });
 
         return back()->with('success', "{$count} data pendaftar submit berhasil dihapus.");

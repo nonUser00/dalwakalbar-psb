@@ -14,7 +14,14 @@ class PendidikanPendaftarController extends Controller
     {
         $search = $request->input('search');
         $tab = $request->input('tab', 'umum');
-        $tipe = ($tab === 'pondok-pesantren' || $tab === 'Pondok Pesantren') ? 'Pondok Pesantren' : 'Umum';
+
+        $tipe = 'Umum';
+        if ($tab === 'madrasah' || $tab === 'Madrasah') {
+            $tipe = 'Madrasah';
+        } elseif ($tab === 'perguruan-tinggi' || $tab === 'Perguruan Tinggi') {
+            $tipe = 'Perguruan Tinggi';
+        }
+
         $limit = $request->input('limit', 5);
 
         $pendidikan = PendidikanPendaftar::with('tingkats')
@@ -39,7 +46,7 @@ class PendidikanPendaftarController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tipe' => 'required|string|in:Umum,Pondok Pesantren',
+            'tipe' => 'required|string|in:Umum,Madrasah,Perguruan Tinggi',
             'name' => 'required|string|max:255',
         ]);
 
@@ -51,7 +58,7 @@ class PendidikanPendaftarController extends Controller
     public function update(Request $request, PendidikanPendaftar $pendidikanPendaftar)
     {
         $validated = $request->validate([
-            'tipe' => 'required|string|in:Umum,Pondok Pesantren',
+            'tipe' => 'required|string|in:Umum,Madrasah,Perguruan Tinggi',
             'name' => 'required|string|max:255',
         ]);
 

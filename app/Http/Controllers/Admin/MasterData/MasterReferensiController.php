@@ -38,7 +38,7 @@ class MasterReferensiController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Master/Referensi/Index', [
-            'cabang' => Cabang::orderBy('name')->get(),
+            'cabang' => Cabang::accessibleBy()->orderBy('name')->get(),
             'ukuran_baju' => UkuranBaju::orderBy('name')->get(),
             'pendidikan_ortu' => PendidikanOrtu::orderBy('name')->get(),
             'pekerjaan_ortu' => PekerjaanOrtu::orderBy('name')->get(),

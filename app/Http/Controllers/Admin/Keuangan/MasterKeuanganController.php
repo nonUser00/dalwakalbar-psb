@@ -43,7 +43,7 @@ class MasterKeuanganController extends Controller implements HasMiddleware
 
     public function tagihanPendaftaranIndex()
     {
-        $jenjangs = Jenjang::where('is_active', true)->get();
+        $jenjangs = Jenjang::accessibleBy()->where('is_active', true)->get();
         $priority = ['mts' => 1, 'ma' => 2, 's1' => 3, 's2' => 4, 's3' => 5];
         $sortedJenjangs = $jenjangs->sortBy(function ($j) use ($priority) {
             $key = strtolower($j->code ?? $j->singkatan ?? $j->name);
@@ -51,7 +51,12 @@ class MasterKeuanganController extends Controller implements HasMiddleware
             return $priority[$key] ?? 99;
         })->values();
 
+        $allowedJenjangIds = $jenjangs->pluck('id')->toArray();
         $kategoriBiayas = KategoriBiaya::where('jenis', 'pendaftaran')
+            ->where(function ($q) use ($allowedJenjangIds) {
+                $q->whereNull('jenjang_id')
+                    ->orWhereIn('jenjang_id', $allowedJenjangIds);
+            })
             ->with('itemBiayas')
             ->orderBy('name')
             ->get();
@@ -73,9 +78,14 @@ class MasterKeuanganController extends Controller implements HasMiddleware
 
     public function tagihanRombonganIndex()
     {
-        $cabangs = Cabang::where('is_active', true)->orderBy('name')->get();
+        $cabangs = Cabang::accessibleBy()->where('is_active', true)->orderBy('name')->get();
+        $allowedCabangIds = $cabangs->pluck('id')->toArray();
 
         $kategoriBiayas = KategoriBiaya::where('jenis', 'rombongan')
+            ->where(function ($q) use ($allowedCabangIds) {
+                $q->whereNull('cabang_id')
+                    ->orWhereIn('cabang_id', $allowedCabangIds);
+            })
             ->with(['itemBiayas', 'cabang'])
             ->orderBy('name')
             ->get();

@@ -6,6 +6,7 @@ use App\Enums\PendaftarStatus;
 use App\Enums\StatusDokumen;
 use App\Enums\StatusKelompokUjian;
 use App\Enums\StatusPembayaran;
+use App\Enums\StatusTagihan;
 use App\Models\Master\TahunAkademik;
 use App\Models\Pendaftar\Pendaftar;
 use App\Models\Setting\Setting;

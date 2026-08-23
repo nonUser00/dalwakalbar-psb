@@ -165,6 +165,11 @@ class PegawaiController extends Controller
                 }
             }
 
+            // Default data permissions to ALL if not specified
+            $validated['allowed_gender'] = $validated['allowed_gender'] ?? 'ALL';
+            $validated['allowed_cabang_ids'] = $validated['allowed_cabang_ids'] ?? Cabang::pluck('id')->toArray();
+            $validated['allowed_jenjang_ids'] = $validated['allowed_jenjang_ids'] ?? Jenjang::pluck('id')->toArray();
+
             $user = User::create($validated);
 
             activity()

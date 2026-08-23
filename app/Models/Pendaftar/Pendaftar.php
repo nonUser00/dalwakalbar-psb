@@ -176,33 +176,42 @@ class Pendaftar extends Authenticatable
     {
         $user = $user ?? Auth::user();
 
-        if (! $user || ($user instanceof User && $user->isSuperAdmin())) {
+        if (! $user) {
             return $query;
         }
 
-        // Filter Gender
-        if (! empty($user->allowed_gender) && $user->allowed_gender !== 'ALL') {
-            $g = $user->allowed_gender;
-            $query->where(function ($q) use ($g) {
-                if (in_array(strtolower($g), ['l', 'laki-laki', 'laki-laki '])) {
-                    $q->where('personal_data->jenis_kelamin', 'L')
-                        ->orWhere('personal_data->jenis_kelamin', 'Laki-Laki')
-                        ->orWhere('personal_data->jenis_kelamin', 'Laki-laki');
-                } elseif (in_array(strtolower($g), ['p', 'perempuan'])) {
-                    $q->where('personal_data->jenis_kelamin', 'P')
-                        ->orWhere('personal_data->jenis_kelamin', 'Perempuan');
-                }
+        // 1. Filter Cabang: jika tidak ada cabang yang dipilih, staf tidak diizinkan mengakses data cabang manapun
+        $allowedCabang = $user->allowed_cabang_ids;
+        if (is_array($allowedCabang)) {
+            if (empty($allowedCabang)) {
+                return $query->whereRaw('1 = 0');
+            }
+            $query->whereIn('cabang_id', $allowedCabang);
+        }
+
+        // 2. Filter Jenjang: jika tidak ada jenjang yang dipilih, staf tidak diizinkan mengakses data jenjang manapun
+        $allowedJenjang = $user->allowed_jenjang_ids;
+        if (is_array($allowedJenjang)) {
+            if (empty($allowedJenjang)) {
+                return $query->whereRaw('1 = 0');
+            }
+            $query->where(function ($q) use ($allowedJenjang) {
+                $q->whereIn('jenjang_id', $allowedJenjang);
             });
         }
 
-        // Filter Cabang
-        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids) && count($user->allowed_cabang_ids) > 0) {
-            $query->whereIn('cabang_id', $user->allowed_cabang_ids);
-        }
-
-        // Filter Jenjang
-        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids) && count($user->allowed_jenjang_ids) > 0) {
-            $query->whereIn('jenjang_id', $user->allowed_jenjang_ids);
+        // 3. Filter Gender
+        if (! empty($user->allowed_gender) && $user->allowed_gender !== 'ALL') {
+            $g = strtolower($user->allowed_gender);
+            $query->where(function ($q) use ($g) {
+                if (in_array($g, ['l', 'laki-laki'])) {
+                    $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(personal_data, '$.jenis_kelamin'))) IN ('l', 'laki-laki', 'laki')")
+                        ->orWhereNull('personal_data'); // Opsional: tampilkan draft yang belum isi gender
+                } elseif (in_array($g, ['p', 'perempuan'])) {
+                    $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(personal_data, '$.jenis_kelamin'))) IN ('p', 'perempuan', 'putri')")
+                        ->orWhereNull('personal_data'); // Opsional: tampilkan draft yang belum isi gender
+                }
+            });
         }
 
         return $query;
@@ -215,37 +224,50 @@ class Pendaftar extends Authenticatable
     {
         $user = $user ?? Auth::user();
 
-        if (! $user || ($user instanceof User && $user->isSuperAdmin())) {
+        if (! $user) {
             return true;
         }
 
-        // Cek Gender
+        // 1. Cek Cabang: jika kosong atau id cabang tidak termasuk, tolak akses (boleh null saat pendaftar awal)
+        $allowedCabang = $user->allowed_cabang_ids;
+        if (is_array($allowedCabang)) {
+            if (empty($allowedCabang)) {
+                return false;
+            }
+            if ($this->cabang_id !== null && ! in_array($this->cabang_id, $allowedCabang)) {
+                return false;
+            }
+        }
+
+        // 2. Cek Jenjang: jika kosong atau id jenjang tidak termasuk, tolak akses (boleh null saat pendaftar awal)
+        $allowedJenjang = $user->allowed_jenjang_ids;
+        if (is_array($allowedJenjang)) {
+            if (empty($allowedJenjang)) {
+                return false;
+            }
+            if ($this->jenjang_id !== null && ! in_array($this->jenjang_id, $allowedJenjang)) {
+                return false;
+            }
+        }
+
+        // 3. Cek Gender
         if (! empty($user->allowed_gender) && $user->allowed_gender !== 'ALL') {
             $candidateGender = strtolower((string) ($this->personal_data['jenis_kelamin'] ?? ''));
+            // Allow if gender is not set yet (drafts)
+            if ($candidateGender === '') {
+                return true;
+            }
+
             $allowedG = strtolower($user->allowed_gender);
 
             if (in_array($allowedG, ['l', 'laki-laki'])) {
-                if (! in_array($candidateGender, ['l', 'laki-laki'])) {
+                if (! in_array($candidateGender, ['l', 'laki-laki', 'laki'])) {
                     return false;
                 }
             } elseif (in_array($allowedG, ['p', 'perempuan'])) {
-                if (! in_array($candidateGender, ['p', 'perempuan'])) {
+                if (! in_array($candidateGender, ['p', 'perempuan', 'putri'])) {
                     return false;
                 }
-            }
-        }
-
-        // Cek Cabang
-        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids) && count($user->allowed_cabang_ids) > 0) {
-            if (! in_array($this->cabang_id, $user->allowed_cabang_ids)) {
-                return false;
-            }
-        }
-
-        // Cek Jenjang
-        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids) && count($user->allowed_jenjang_ids) > 0) {
-            if (! in_array($this->jenjang_id, $user->allowed_jenjang_ids)) {
-                return false;
             }
         }
 

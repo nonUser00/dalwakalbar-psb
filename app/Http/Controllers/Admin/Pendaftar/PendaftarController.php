@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin\Pendaftar;
 
 use App\Http\Controllers\Controller;
+use App\Models\Keuangan\Bank;
 use App\Models\Keuangan\Tagihan;
 use App\Models\Master\Dokumen;
+use App\Models\Master\Jenjang;
 use App\Models\Pendaftar\Pendaftar;
-use App\Models\ProgramPendidikan;
 use App\Services\NumberingService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -41,11 +42,11 @@ class PendaftarController extends Controller implements HasMiddleware
         ];
         $actualStatus = $statusMapping[$status] ?? 'DRAFT';
 
-        $jenjangs = ProgramPendidikan::where('is_active', true)->orderBy('nama')->get();
+        $jenjangs = Jenjang::accessibleBy()->where('is_active', true)->orderBy('code')->get();
 
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', $actualStatus)
-            ->with(['periode', 'program', 'gelombang']);
+            ->with(['periode', 'jenjang', 'cabang', 'gelombang']);
 
         if ($actualStatus === 'TAGIHAN') {
             $query->with(['tagihans.pembayarans', 'tagihans.items']);
@@ -64,7 +65,7 @@ class PendaftarController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('jenjang_id')) {
-            $query->where('program_id', $request->jenjang_id);
+            $query->where('jenjang_id', $request->jenjang_id);
         }
 
         $pendaftars = $query->orderBy('created_at', 'desc')->get();
@@ -80,7 +81,7 @@ class PendaftarController extends Controller implements HasMiddleware
 
     public function show(Pendaftar $pendaftar)
     {
-        if (! $pendaftar->isAccessibleBy(Auth::user())) {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
             abort(403, 'Anda tidak memiliki hak akses untuk melihat data calon santri ini.');
         }
 
@@ -95,16 +96,22 @@ class PendaftarController extends Controller implements HasMiddleware
         ]);
 
         $masterDokumens = Dokumen::with('jenjangs:id,name,code,singkatan')->get();
+        $banks = Bank::where('is_active', true)
+            ->orderBy('kode_bank')
+            ->orderBy('singkatan')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Admin/Pendaftar/Show', [
             'pendaftar' => $pendaftar,
             'masterDokumens' => $masterDokumens,
+            'banks' => $banks,
         ]);
     }
 
     public function cetakKartu(Pendaftar $pendaftar)
     {
-        if (! $pendaftar->isAccessibleBy(Auth::user())) {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
             abort(403, 'Anda tidak memiliki hak akses untuk mencetak kartu calon santri ini.');
         }
 
@@ -125,6 +132,10 @@ class PendaftarController extends Controller implements HasMiddleware
 
     public function resetPassword(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -150,11 +161,18 @@ class PendaftarController extends Controller implements HasMiddleware
                 return back()->with('error', 'Tidak ada data yang dipilih.');
             }
 
-            DB::transaction(function () use ($ids, $request) {
-                Pendaftar::whereIn('id', $ids)->delete();
+            $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $ids)->get();
+            if ($pendaftars->isEmpty()) {
+                return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses untuk dihapus.');
+            }
+
+            $validIds = $pendaftars->pluck('id')->toArray();
+
+            DB::transaction(function () use ($validIds, $request) {
+                Pendaftar::whereIn('id', $validIds)->delete();
 
                 activity()->useLog('Pendaftar')->event('deleted')
-                    ->withProperties(['ip_address' => $request->ip(), 'user_agent' => $request->userAgent(), 'ids' => $ids])
+                    ->withProperties(['ip_address' => $request->ip(), 'user_agent' => $request->userAgent(), 'ids' => $validIds])
                     ->log('Menghapus massal data Pendaftar');
             });
 
@@ -162,6 +180,10 @@ class PendaftarController extends Controller implements HasMiddleware
         }
 
         $pendaftar = Pendaftar::findOrFail($id);
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $oldData = $pendaftar->toArray();
 
         DB::transaction(function () use ($pendaftar, $request, $oldData) {
@@ -184,6 +206,10 @@ class PendaftarController extends Controller implements HasMiddleware
 
     public function verify(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'action' => 'required|in:terima,tolak',
             'alasan_penolakan' => 'required_if:action,tolak|nullable|string',

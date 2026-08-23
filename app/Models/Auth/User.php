@@ -109,6 +109,21 @@ class User extends Authenticatable
         return $this->hasRole('Super Admin');
     }
 
+    public function allowedCabangIds(): array
+    {
+        return is_array($this->allowed_cabang_ids) ? $this->allowed_cabang_ids : [];
+    }
+
+    public function allowedJenjangIds(): array
+    {
+        return is_array($this->allowed_jenjang_ids) ? $this->allowed_jenjang_ids : [];
+    }
+
+    public function allowedGender(): string
+    {
+        return $this->allowed_gender ?: 'ALL';
+    }
+
     /**
      * Scope query pendaftar berdasarkan izin manajemen data user pegawai.
      */
@@ -116,33 +131,40 @@ class User extends Authenticatable
     {
         $user = $user ?? Auth::user();
 
-        if (! $user || $user->isSuperAdmin()) {
+        if (! $user) {
             return $query;
         }
 
-        // 1. Filter Gender
+        // 1. Filter Cabang
+        $allowedCabang = $user->allowed_cabang_ids;
+        if (is_array($allowedCabang)) {
+            if (empty($allowedCabang)) {
+                return $query->whereRaw('1 = 0');
+            }
+            $query->whereIn('cabang_id', $allowedCabang);
+        }
+
+        // 2. Filter Jenjang
+        $allowedJenjang = $user->allowed_jenjang_ids;
+        if (is_array($allowedJenjang)) {
+            if (empty($allowedJenjang)) {
+                return $query->whereRaw('1 = 0');
+            }
+            $query->whereIn('jenjang_id', $allowedJenjang);
+        }
+
+        // 3. Filter Gender
         if ($user->allowed_gender && $user->allowed_gender !== 'ALL') {
-            $g = $user->allowed_gender;
+            $g = strtolower($user->allowed_gender);
             $query->where(function ($q) use ($g) {
-                if (in_array(strtolower($g), ['l', 'laki-laki', 'laki-laki '])) {
-                    $q->where('personal_data->jenis_kelamin', 'L')
-                        ->orWhere('personal_data->jenis_kelamin', 'Laki-Laki')
-                        ->orWhere('personal_data->jenis_kelamin', 'Laki-laki');
-                } elseif (in_array(strtolower($g), ['p', 'perempuan'])) {
-                    $q->where('personal_data->jenis_kelamin', 'P')
-                        ->orWhere('personal_data->jenis_kelamin', 'Perempuan');
+                if (in_array($g, ['l', 'laki-laki'])) {
+                    $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(personal_data, '$.jenis_kelamin'))) IN ('l', 'laki-laki', 'laki')")
+                        ->orWhereNull('personal_data'); // Opsional: tampilkan draft yang belum isi gender
+                } elseif (in_array($g, ['p', 'perempuan'])) {
+                    $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(personal_data, '$.jenis_kelamin'))) IN ('p', 'perempuan', 'putri')")
+                        ->orWhereNull('personal_data'); // Opsional: tampilkan draft yang belum isi gender
                 }
             });
-        }
-
-        // 2. Filter Cabang
-        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids)) {
-            $query->whereIn('cabang_id', $user->allowed_cabang_ids);
-        }
-
-        // 3. Filter Jenjang
-        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids)) {
-            $query->whereIn('jenjang_id', $user->allowed_jenjang_ids);
         }
 
         return $query;

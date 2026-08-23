@@ -21,7 +21,7 @@ class TahunAkademikController extends Controller
     public function index()
     {
         $tahunAkademiks = TahunAkademik::with(['periodes.jenjangs'])->orderByDesc('name')->get();
-        $jenjangs = Jenjang::orderBy('name')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('name')->get();
 
         return Inertia::render('Admin/Akademik/TahunAkademik/Index', [
             'tahunAkademiks' => $tahunAkademiks,
@@ -32,7 +32,7 @@ class TahunAkademikController extends Controller
     public function createPeriode(Request $request)
     {
         $tahunAkademiks = TahunAkademik::orderByDesc('name')->get();
-        $jenjangs = Jenjang::orderBy('name')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('name')->get();
 
         return Inertia::render('Admin/Akademik/TahunAkademik/PeriodeForm', [
             'tahunAkademiks' => $tahunAkademiks,
@@ -45,7 +45,7 @@ class TahunAkademikController extends Controller
     {
         $periode = Periode::with('jenjangs')->findOrFail($id);
         $tahunAkademiks = TahunAkademik::orderByDesc('name')->get();
-        $jenjangs = Jenjang::orderBy('name')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('name')->get();
 
         return Inertia::render('Admin/Akademik/TahunAkademik/PeriodeForm', [
             'periode' => $periode,
@@ -157,8 +157,8 @@ class TahunAkademikController extends Controller
             'jalur_pendaftaran' => 'required|string|in:Semua,Reguler,Pindahan',
             'status' => 'required|string|in:buka,tutup,draft',
             'kuota' => 'nullable|integer|min:0',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'jenjang_ids' => 'nullable|array',
             'jenjang_ids.*' => 'exists:jenjangs,id',
             'jenjang_items' => 'nullable|array',
@@ -167,6 +167,24 @@ class TahunAkademikController extends Controller
             'jenjang_items.*.kuota' => 'nullable|integer|min:0',
         ]);
 
+        // Validasi tidak boleh overlap range tanggal dengan periode lain pada Tahun Akademik yang sama
+        $overlap = Periode::where('tahun_akademik_id', $validated['tahun_akademik_id'])
+            ->where(function ($query) use ($validated) {
+                $query->where(function ($q) use ($validated) {
+                    $q->where('start_date', '<=', $validated['end_date'])
+                        ->where('end_date', '>=', $validated['start_date']);
+                });
+            })
+            ->first();
+
+        if ($overlap) {
+            return back()->withErrors([
+                'start_date' => "Rentang waktu bertabrakan dengan {$overlap->name} (".
+                    ($overlap->start_date?->format('d/m/Y') ?? '-').' s/d '.
+                    ($overlap->end_date?->format('d/m/Y') ?? '-').'). Hanya diperbolehkan 1 gelombang dalam 1 rentang waktu.',
+            ])->withInput();
+        }
+
         DB::transaction(function () use ($validated, $request) {
             $data = Periode::create([
                 'tahun_akademik_id' => $validated['tahun_akademik_id'],
@@ -174,6 +192,14 @@ class TahunAkademikController extends Controller
                 'jalur_pendaftaran' => $validated['jalur_pendaftaran'],
                 'status' => $validated['status'],
                 'kuota' => $validated['kuota'] ?? null,
+                'start_date' => $validated['start_date'] ?? null,
+                'end_date' => $validated['end_date'] ?? null,
+            ]);
+
+            // Sinkronkan juga model Gelombang default untuk periode ini
+            Gelombang::create([
+                'periode_id' => $data->id,
+                'name' => $validated['name'],
                 'start_date' => $validated['start_date'] ?? null,
                 'end_date' => $validated['end_date'] ?? null,
             ]);
@@ -208,8 +234,8 @@ class TahunAkademikController extends Controller
             'jalur_pendaftaran' => 'required|string|in:Semua,Reguler,Pindahan',
             'status' => 'required|string|in:buka,tutup,draft',
             'kuota' => 'nullable|integer|min:0',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'jenjang_ids' => 'nullable|array',
             'jenjang_ids.*' => 'exists:jenjangs,id',
             'jenjang_items' => 'nullable|array',
@@ -217,6 +243,25 @@ class TahunAkademikController extends Controller
             'jenjang_items.*.is_selected' => 'nullable|boolean',
             'jenjang_items.*.kuota' => 'nullable|integer|min:0',
         ]);
+
+        // Validasi tidak boleh overlap range tanggal dengan periode lain pada Tahun Akademik yang sama
+        $overlap = Periode::where('tahun_akademik_id', $data->tahun_akademik_id)
+            ->where('id', '!=', $data->id)
+            ->where(function ($query) use ($validated) {
+                $query->where(function ($q) use ($validated) {
+                    $q->where('start_date', '<=', $validated['end_date'])
+                        ->where('end_date', '>=', $validated['start_date']);
+                });
+            })
+            ->first();
+
+        if ($overlap) {
+            return back()->withErrors([
+                'start_date' => "Rentang waktu bertabrakan dengan {$overlap->name} (".
+                    ($overlap->start_date?->format('d/m/Y') ?? '-').' s/d '.
+                    ($overlap->end_date?->format('d/m/Y') ?? '-').'). Hanya diperbolehkan 1 gelombang dalam 1 rentang waktu.',
+            ])->withInput();
+        }
 
         $oldData = $data->toArray();
         $oldData['jenjang_ids'] = $data->jenjangs->pluck('id')->toArray();
@@ -230,6 +275,23 @@ class TahunAkademikController extends Controller
                 'start_date' => $validated['start_date'] ?? null,
                 'end_date' => $validated['end_date'] ?? null,
             ]);
+
+            // Sinkronkan juga gelombang terkait
+            $gelombang = $data->gelombangs()->first();
+            if ($gelombang) {
+                $gelombang->update([
+                    'name' => $validated['name'],
+                    'start_date' => $validated['start_date'] ?? null,
+                    'end_date' => $validated['end_date'] ?? null,
+                ]);
+            } else {
+                Gelombang::create([
+                    'periode_id' => $data->id,
+                    'name' => $validated['name'],
+                    'start_date' => $validated['start_date'] ?? null,
+                    'end_date' => $validated['end_date'] ?? null,
+                ]);
+            }
 
             if ($request->has('jenjang_items') && is_array($request->input('jenjang_items'))) {
                 $syncData = [];
@@ -277,9 +339,27 @@ class TahunAkademikController extends Controller
         $validated = $request->validate([
             'periode_id' => 'required|exists:periodes,id',
             'name' => 'required|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
         ]);
+
+        $periode = Periode::findOrFail($validated['periode_id']);
+
+        // Pastikan tidak nabrak gelombang lain pada periode yang sama atau tahun akademik yang sama
+        $overlap = Gelombang::whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $periode->tahun_akademik_id))
+            ->where(function ($query) use ($validated) {
+                $query->where('start_date', '<=', $validated['end_date'])
+                    ->where('end_date', '>=', $validated['start_date']);
+            })
+            ->first();
+
+        if ($overlap) {
+            return back()->withErrors([
+                'start_date' => "Rentang waktu gelombang bertabrakan dengan {$overlap->name} (".
+                    ($overlap->start_date?->format('d/m/Y') ?? '-').' s/d '.
+                    ($overlap->end_date?->format('d/m/Y') ?? '-').').',
+            ])->withInput();
+        }
 
         DB::transaction(function () use ($validated, $request) {
             $data = Gelombang::create($validated);
@@ -294,13 +374,32 @@ class TahunAkademikController extends Controller
     private function updateGelombang(Request $request, $id)
     {
         $data = Gelombang::findOrFail($id);
-        $validated = $request->request->all(); // Workaround for optional start/end date validation logic
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
         ]);
+
+        $periode = $data->periode;
+
+        if ($periode) {
+            $overlap = Gelombang::whereHas('periode', fn ($q) => $q->where('tahun_akademik_id', $periode->tahun_akademik_id))
+                ->where('id', '!=', $data->id)
+                ->where(function ($query) use ($validated) {
+                    $query->where('start_date', '<=', $validated['end_date'])
+                        ->where('end_date', '>=', $validated['start_date']);
+                })
+                ->first();
+
+            if ($overlap) {
+                return back()->withErrors([
+                    'start_date' => "Rentang waktu gelombang bertabrakan dengan {$overlap->name} (".
+                        ($overlap->start_date?->format('d/m/Y') ?? '-').' s/d '.
+                        ($overlap->end_date?->format('d/m/Y') ?? '-').').',
+                ])->withInput();
+            }
+        }
 
         $oldData = $data->toArray();
 

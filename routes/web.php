@@ -413,7 +413,6 @@ Route::middleware('auth:pendaftar')->prefix('psb')->name('psb.')->group(function
     Route::get('/keuangan/pembayaran/{pembayaran}/edit', [PsbKeuanganController::class, 'editPembayaran'])->name('keuangan.pembayaran.edit');
     Route::post('/keuangan/pembayaran/{pembayaran}/update', [PsbKeuanganController::class, 'updatePembayaran'])->name('keuangan.pembayaran.update');
     Route::delete('/keuangan/pembayaran/{pembayaran}', [PsbKeuanganController::class, 'destroyPembayaran'])->name('keuangan.pembayaran.destroy');
-    Route::get('/keuangan/va', [PsbKeuanganController::class, 'virtualAccount'])->name('keuangan.va');
     Route::get('/keuangan/riwayat', [PsbKeuanganController::class, 'riwayat'])->name('keuangan.riwayat');
     Route::get('/keuangan/riwayat/{tagihan}', [PsbKeuanganController::class, 'showRiwayatTagihan'])->name('keuangan.riwayat.show');
     Route::post('/keuangan/bayar', [PsbKeuanganController::class, 'uploadBukti'])->name('keuangan.bayar');

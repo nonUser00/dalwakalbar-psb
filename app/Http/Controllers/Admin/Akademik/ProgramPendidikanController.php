@@ -30,7 +30,8 @@ class ProgramPendidikanController extends Controller
     public function index()
     {
         $orderMap = ['MTS' => 1, 'MA' => 2, 'S1' => 3, 'S2' => 4, 'S3' => 5];
-        $jenjangs = Jenjang::with(['tingkats', 'jurusans', 'fakultas.prodis'])
+        $jenjangs = Jenjang::accessibleBy()
+            ->with(['tingkats', 'jurusans', 'fakultas.prodis'])
             ->get()
             ->sortBy(fn ($item) => $orderMap[strtoupper($item->code ?? '')] ?? 99)
             ->values();

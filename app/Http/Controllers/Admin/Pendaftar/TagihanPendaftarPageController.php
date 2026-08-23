@@ -54,11 +54,14 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
-        // All active Jenjangs ordered (MTs, MA, S1, S2, S3)
-        $jenjangs = Jenjang::orderBy('created_at', 'asc')->get();
+        // All active Jenjangs accessible by user ordered (MTs, MA, S1, S2, S3)
+        $jenjangs = Jenjang::accessibleBy()->orderBy('created_at', 'asc')->get();
 
-        // Selected active jenjang
+        // Selected active jenjang (ensure valid for allowed jenjangs)
         $selectedJenjangId = $request->query('jenjang_id');
+        if ($selectedJenjangId && ! $jenjangs->contains('id', $selectedJenjangId)) {
+            $selectedJenjangId = null;
+        }
         if (! $selectedJenjangId && $jenjangs->isNotEmpty()) {
             $selectedJenjangId = $jenjangs->first()->id;
         }
@@ -83,7 +86,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                 'jenjangs' => $jenjangs,
                 'jenjangCounts' => $badgeCounts,
                 'selectedJenjangId' => (string) ($selectedJenjangId ?? ''),
-                'cabangs' => Cabang::orderBy('name')->get(),
+                'cabangs' => Cabang::accessibleBy()->orderBy('name')->get(),
                 'activeTahunAkademik' => null,
                 'hasActiveTahunAkademik' => false,
                 'gelombangs' => [],
@@ -161,7 +164,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                 ?? $gelombangsData->first();
 
             if ($matchingWave) {
-                $gelombangId = $matchingWave['id'];
+                $gelombangId = '';
             }
         }
 
@@ -324,7 +327,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         $pendaftars = $query->latest('submitted_at')->latest('created_at')->paginate($limit)->withQueryString();
 
         // Master options for filters and modals
-        $cabangs = Cabang::orderBy('name')->get();
+        $cabangs = Cabang::accessibleBy()->orderBy('name')->get();
         $banks = Bank::where('is_active', true)->orderBy('name')->get();
         $kategoriBiayas = KategoriBiaya::with('itemBiayas')->get();
 
@@ -362,8 +365,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function create(Request $request)
     {
-        $jenjangs = Jenjang::orderBy('code')->get();
-        $cabangs = Cabang::orderBy('name')->get();
+        $jenjangs = Jenjang::accessibleBy()->orderBy('code')->get();
+        $cabangs = Cabang::accessibleBy()->orderBy('name')->get();
 
         $idsParam = $request->query('ids') ?: $request->query('pendaftar_id');
         $ids = [];
@@ -373,14 +376,15 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
         $jenjangId = $request->query('jenjang_id');
         if (! $jenjangId && ! empty($ids)) {
-            $firstPendaftar = Pendaftar::whereIn('id', $ids)->first();
+            $firstPendaftar = Pendaftar::accessibleBy()->whereIn('id', $ids)->first();
             $jenjangId = $firstPendaftar?->jenjang_id;
         }
 
         $activeJenjang = $jenjangs->firstWhere('id', $jenjangId) ?: $jenjangs->first();
 
         // Target pendaftars strictly MUST be status TAGIHAN, without tagihans in current cycle, and matching active jenjang
-        $rawPendaftars = Pendaftar::whereIn('id', $ids)
+        $rawPendaftars = Pendaftar::accessibleBy()
+            ->whereIn('id', $ids)
             ->where('status', PendaftarStatus::Tagihan)
             ->where(function ($q) {
                 $q->where(function ($sq) {
@@ -450,8 +454,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
         // Calculate jenjang stats from DB
         $jenjangStat = [
-            'total_pendaftar' => Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->count(),
-            'sudah_dibuat' => Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->where(function ($q) {
+            'total_pendaftar' => Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->count(),
+            'sudah_dibuat' => Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->where(function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('is_interview_ulang', false)->orWhereNull('is_interview_ulang');
                 })->has('tagihans')
@@ -461,7 +465,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                         });
                     });
             })->count(),
-            'belum_dibuat' => Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->where(function ($q) {
+            'belum_dibuat' => Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $activeJenjang?->id)->where(function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('is_interview_ulang', false)->orWhereNull('is_interview_ulang');
                 })->doesntHave('tagihans')
@@ -476,8 +480,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
         // Count per jenjang for TAGIHAN status
         $jenjangCounts = [];
         foreach ($jenjangs as $j) {
-            $total = Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->count();
-            $sudahDibuat = Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->where(function ($q) {
+            $total = Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->count();
+            $sudahDibuat = Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->where(function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('is_interview_ulang', false)->orWhereNull('is_interview_ulang');
                 })->has('tagihans')
@@ -487,7 +491,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                         });
                     });
             })->count();
-            $belumDibuat = Pendaftar::where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->where(function ($q) {
+            $belumDibuat = Pendaftar::accessibleBy()->where('status', PendaftarStatus::Tagihan)->where('jenjang_id', $j->id)->where(function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('is_interview_ulang', false)->orWhereNull('is_interview_ulang');
                 })->doesntHave('tagihans')
@@ -616,7 +620,7 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
             foreach ($validated['pendaftar_ids'] as $pendaftarId) {
                 $pendaftar = Pendaftar::find($pendaftarId);
-                if (! $pendaftar) {
+                if (! $pendaftar || ! $pendaftar->isAccessibleBy(auth()->user())) {
                     continue;
                 }
 
@@ -717,6 +721,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function destroyBill(Request $request, Tagihan $tagihan)
     {
+        if (! $tagihan->pendaftar?->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $hasVerifiedPayment = $tagihan->pembayarans()->where('status', 'DITERIMA')->exists();
 
         if ($hasVerifiedPayment) {
@@ -747,6 +755,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function addPayment(Request $request, Tagihan $tagihan)
     {
+        if (! $tagihan->pendaftar?->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'payment_method' => 'required|in:TUNAI,SAMAHA,TRANSFER',
             'amount' => 'required|numeric|min:1',
@@ -816,6 +828,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function editPayment(Request $request, Pembayaran $pembayaran)
     {
+        if (! $pembayaran->tagihan?->pendaftar?->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'catatan' => 'nullable|string|max:500',
@@ -863,6 +879,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function verifyPayment(Request $request, Pembayaran $pembayaran)
     {
+        if (! $pembayaran->tagihan?->pendaftar?->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'action' => 'required|in:terima,tolak,kembalikan',
             'alasan_penolakan' => 'required_if:action,tolak|nullable|string|max:500',
@@ -952,6 +972,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function deletePayment(Pembayaran $pembayaran)
     {
+        if (! $pembayaran->tagihan?->pendaftar?->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         if (empty($pembayaran->created_by)) {
             return back()->withErrors(['message' => 'Pembayaran yang dilakukan oleh pendaftar tidak dapat dihapus.']);
         }
@@ -983,9 +1007,9 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
         $pembayarans = Pembayaran::whereIn('id', $validated['ids'])->get();
 
-        $unauthorized = $pembayarans->filter(fn ($p) => empty($p->created_by));
+        $unauthorized = $pembayarans->filter(fn ($p) => empty($p->created_by) || ! $p->tagihan?->pendaftar?->isAccessibleBy(auth()->user()));
         if ($unauthorized->isNotEmpty()) {
-            return back()->withErrors(['message' => 'Terdapat pembayaran pendaftar yang tidak dapat dihapus.']);
+            return back()->withErrors(['message' => 'Terdapat pembayaran pendaftar yang tidak memiliki hak akses atau tidak dapat dihapus.']);
         }
 
         DB::transaction(function () use ($pembayarans) {
@@ -1065,6 +1089,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function resetPassword(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $validated = $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ], [
@@ -1094,6 +1122,10 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
 
     public function destroy(Request $request, Pendaftar $pendaftar)
     {
+        if (! $pendaftar->isAccessibleBy(auth()->user())) {
+            abort(403, 'Anda tidak memiliki hak akses ke data pendaftar ini.');
+        }
+
         $oldData = $pendaftar->toArray();
 
         DB::transaction(function () use ($pendaftar, $request, $oldData) {
@@ -1121,10 +1153,17 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
             'ids.*' => 'required|string',
         ]);
 
-        $count = count($validated['ids']);
+        $pendaftars = Pendaftar::accessibleBy(auth()->user())->whereIn('id', $validated['ids'])->get();
 
-        DB::transaction(function () use ($validated, $request) {
-            Pendaftar::whereIn('id', $validated['ids'])->delete();
+        if ($pendaftars->isEmpty()) {
+            return back()->with('error', 'Tidak ada data pendaftar yang memiliki hak akses untuk dihapus.');
+        }
+
+        $count = $pendaftars->count();
+        $idsToDelete = $pendaftars->pluck('id')->toArray();
+
+        DB::transaction(function () use ($idsToDelete, $request, $count) {
+            Pendaftar::whereIn('id', $idsToDelete)->delete();
 
             activity()
                 ->useLog('Pendaftar Tagihan')
@@ -1132,8 +1171,8 @@ class TagihanPendaftarPageController extends Controller implements HasMiddleware
                 ->withProperties([
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
-                    'count' => count($validated['ids']),
-                    'ids' => $validated['ids'],
+                    'count' => $count,
+                    'ids' => $idsToDelete,
                 ])
                 ->log("Menghapus massal {$count} data pendaftar tagihan.");
         });

@@ -2,7 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PsbLayout from '@/Layouts/PsbLayout.vue';
-import { formatHariKerja } from '@/lib/utils';
+import { formatHariKerja, formatWaUrl } from '@/lib/utils';
 import { getPendaftarStatusBadge } from '@/types/enums';
 
 defineOptions({ layout: PsbLayout });
@@ -495,8 +495,8 @@ const openCetakKartu = () => {
                     </div>
 
                     <a
-                        v-if="cleanWa = kontak.wa.replace(/[^0-9]/g, '')"
-                        :href="`https://wa.me/${cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa}?text=Assalamu%27alaikum%20Panitia%20PSB%20Dalwa%20Kalbar,%20saya%20${encodeURIComponent(pendaftar.nama)}%20(No.%20Reg:%20${encodeURIComponent(pendaftar.nomor_pendaftaran || '-')})%20membutuhkan%20informasi.`"
+                        v-if="kontak.wa"
+                        :href="formatWaUrl(kontak.wa, `Assalamu'alaikum Panitia PSB Dalwa Kalbar, saya ${pendaftar.nama} (No. Reg: ${pendaftar.nomor_pendaftaran || '-'}) membutuhkan informasi.`)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 hover:shadow-md"

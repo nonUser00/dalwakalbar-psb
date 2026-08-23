@@ -16,14 +16,13 @@ const props = defineProps<{
 }>();
 
 // Tab state
-const activeTab = ref<'personal' | 'parent' | 'education' | 'document' | 'va'>('personal');
+const activeTab = ref<'personal' | 'parent' | 'education' | 'document'>('personal');
 
 const tabs = [
     { key: 'personal', name: 'Data Diri & Domisili', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
     { key: 'parent', name: 'Orang Tua & Wali', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
     { key: 'education', name: 'Jenjang & Pendidikan', icon: 'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z' },
     { key: 'document', name: 'Dokumen Persyaratan', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { key: 'va', name: 'Virtual Account & VA', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
 ];
 
 const jenjangCode = computed(() => {
@@ -1993,7 +1992,11 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    Nomor Induk Siswa Nasional (NISN)
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'Nomor Induk Mahasiswa (NIM / NPM)'
+                                            : 'Nomor Induk Siswa Nasional (NISN)'
+                                    }}
                                 </p>
                                 <p
                                     class="font-mono text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2045,12 +2048,49 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.education_data?.fakultas_sebelumnya || props.pendaftar.education_data?.fakultas_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.fakultas"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    Tingkat / Kelas Terakhir Sebelumnya
+                                    Fakultas Sebelumnya
+                                </p>
+                                <p
+                                    class="text-sm font-semibold text-gray-900 dark:text-slate-100"
+                                >
+                                    {{ props.pendaftar.education_data?.fakultas_sebelumnya || props.pendaftar.education_data?.fakultas_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.fakultas }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="props.pendaftar.education_data?.prodi_sebelumnya || props.pendaftar.education_data?.prodi_asal || props.pendaftar.education_data?.jurusan_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.prodi"
+                                class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                            >
+                                <p
+                                    class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
+                                >
+                                    Program Studi Sebelumnya
+                                </p>
+                                <p
+                                    class="text-sm font-semibold text-gray-900 dark:text-slate-100"
+                                >
+                                    {{ props.pendaftar.education_data?.prodi_sebelumnya || props.pendaftar.education_data?.prodi_asal || props.pendaftar.education_data?.jurusan_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.prodi }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Pindahan' || props.pendaftar.education_data?.tingkat_sebelumnya || props.pendaftar.education_data?.pendidikan_sebelumnya?.tingkat"
+                                class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                            >
+                                <p
+                                    class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
+                                >
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'Semester / Tingkat Terakhir Sebelumnya'
+                                            : 'Tingkat / Kelas Terakhir Sebelumnya'
+                                    }}
                                 </p>
                                 <p
                                     class="text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2069,7 +2109,13 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    NPSN / NSM Sekolah Asal
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'NPSN / Kode Perguruan Tinggi'
+                                            : (props.pendaftar.education_data?.tipe_sekolah_asal === 'Madrasah' || props.pendaftar.education_data?.nsm_sekolah_asal)
+                                              ? 'NPSN / NSM Madrasah'
+                                              : 'NPSN Sekolah'
+                                    }}
                                 </p>
                                 <p
                                     class="font-mono text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2094,6 +2140,7 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Reguler' || props.pendaftar.education_data?.no_ijazah"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
@@ -2113,6 +2160,7 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Reguler' || props.pendaftar.education_data?.tahun_lulus"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
@@ -2391,241 +2439,6 @@ const getPendaftarPhoto = (pendaftar: any): string | null => {
                                         </a>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================================= -->
-            <!-- TAB 5: VIRTUAL ACCOUNT & TAGIHAN (100% PERSIS ADMIN SHOW) -->
-            <!-- ========================================================= -->
-            <div v-show="activeTab === 'va'" class="space-y-6">
-                <!-- Active Virtual Accounts -->
-                <div
-                    class="flex flex-col overflow-hidden border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-lg sm:rounded-4xl dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <div class="p-6 sm:p-8">
-                        <div
-                            class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 dark:border-slate-800"
-                        >
-                            <div class="flex items-center gap-4">
-                                <div
-                                    class="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 dark:border-indigo-900/50 dark:bg-indigo-950/50"
-                                >
-                                    <svg
-                                        class="h-6 w-6 text-indigo-500 dark:text-indigo-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                        />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3
-                                        class="text-xl font-bold text-gray-900 dark:text-slate-100"
-                                    >
-                                        Virtual Account Bank Pembayaran
-                                    </h3>
-                                    <p
-                                        class="mt-0.5 text-sm text-gray-500 dark:text-slate-400"
-                                    >
-                                        Nomor rekening virtual account bank resmi untuk pembayaran pendaftaran
-                                    </p>
-                                </div>
-                            </div>
-
-                            <span
-                                class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-300"
-                            >
-                                <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-                                {{ activeVirtualAccounts.length }} Channel Bank Aktif
-                            </span>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div
-                            v-if="activeVirtualAccounts.length === 0"
-                            class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-200 bg-gray-50/70 p-12 text-center dark:border-slate-800 dark:bg-slate-800/40"
-                        >
-                            <div
-                                class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 dark:bg-slate-800 dark:text-slate-500"
-                            >
-                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                    />
-                                </svg>
-                            </div>
-                            <h4 class="mt-4 text-base font-bold text-gray-900 dark:text-slate-100">
-                                Belum Ada Virtual Account Aktif
-                            </h4>
-                            <p class="mt-1 text-xs text-gray-500 max-w-sm dark:text-slate-400">
-                                Belum ada nomor Virtual Account aktif yang diterbitkan untuk akun Anda.
-                            </p>
-                        </div>
-
-                        <!-- Centered Virtual Account Cards -->
-                        <div
-                            v-else
-                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                        >
-                            <div
-                                v-for="va in activeVirtualAccounts"
-                                :key="va.id"
-                                class="group relative flex flex-col items-center justify-between rounded-3xl border border-gray-200/90 bg-white p-6 sm:p-7 text-center shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-500/40"
-                            >
-                                <!-- TOP SECTION: Bank Logo & Bank Name (Centered) -->
-                                <div class="flex flex-col items-center w-full">
-                                    <!-- Bank Logo Container -->
-                                    <div
-                                        class="flex h-16 w-36 items-center justify-center rounded-2xl border border-gray-100 bg-gray-50/80 p-2.5 shadow-2xs dark:border-slate-700/60 dark:bg-slate-800"
-                                    >
-                                        <img
-                                            :src="getBankLogo(va.bank || va)"
-                                            :alt="va.bank?.name || va.bank?.nama_bank || 'Bank'"
-                                            class="h-full w-auto max-h-11 object-contain transition-transform duration-200 group-hover:scale-105"
-                                        />
-                                    </div>
-
-                                    <!-- Bank Name -->
-                                    <h4 class="mt-3.5 text-base font-extrabold text-gray-900 leading-snug dark:text-slate-100">
-                                        {{
-                                            va.bank?.name ||
-                                            va.bank?.nama_bank ||
-                                            va.bank?.singkatan ||
-                                            'Bank Pembayaran'
-                                        }}
-                                    </h4>
-
-                                    <!-- Bank Code & Status Pill -->
-                                    <div class="mt-1 flex items-center justify-center gap-2">
-                                        <span
-                                            v-if="va.bank?.kode_bank"
-                                            class="font-mono text-xs font-semibold text-gray-400 dark:text-slate-500"
-                                        >
-                                            Kode Bank: {{ va.bank.kode_bank }}
-                                        </span>
-                                        <span
-                                            class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 uppercase dark:border-emerald-900/50 dark:bg-emerald-950/60 dark:text-emerald-300"
-                                        >
-                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                            Aktif
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- MIDDLE SECTION: Nomor VA (Centered) -->
-                                <div class="mt-6 w-full flex flex-col items-center">
-                                    <span
-                                        class="text-[11px] font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
-                                    >
-                                        Nomor Virtual Account
-                                    </span>
-
-                                    <!-- VA Highlight Box with Copy Button -->
-                                    <div
-                                        class="mt-2 flex w-full items-center justify-between gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 dark:border-blue-500/30 dark:bg-blue-950/30"
-                                    >
-                                        <span
-                                            class="font-mono text-lg sm:text-xl font-black tracking-wider text-primary dark:text-blue-300 select-all"
-                                        >
-                                            {{ va.nomor_va || va.va_number || '-' }}
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            @click="copyToClipboard(va.nomor_va || va.va_number, va.id)"
-                                            class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-white text-primary shadow-2xs transition-all hover:scale-105 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white"
-                                            :title="copiedVaId === va.id ? 'Tersalin!' : 'Salin Nomor VA'"
-                                        >
-                                            <svg
-                                                v-if="copiedVaId === va.id"
-                                                class="h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <svg
-                                                v-else
-                                                class="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <span v-if="copiedVaId === va.id" class="mt-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                                        Nomor VA berhasil disalin!
-                                    </span>
-                                </div>
-
-                                <!-- BOTTOM SECTION: Meta Info (Centered) -->
-                                <div class="mt-5 w-full border-t border-gray-100 pt-3.5 text-center dark:border-slate-800">
-                                    <p class="text-xs font-bold text-gray-800 dark:text-slate-200">
-                                        a.n. {{ props.pendaftar.nama || 'Calon Santri' }}
-                                    </p>
-                                    <p class="mt-0.5 text-[11px] text-gray-400 dark:text-slate-500">
-                                        Pembayaran akan otomatis terverifikasi sistem.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Billing History / Tagihan -->
-                <div
-                    v-if="props.pendaftar.tagihans && props.pendaftar.tagihans.length > 0"
-                    class="rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4"
-                >
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-slate-100 border-b border-gray-100 pb-3 dark:border-slate-800">
-                        Riwayat Tagihan Pendaftaran
-                    </h3>
-
-                    <div class="space-y-3">
-                        <div
-                            v-for="t in props.pendaftar.tagihans"
-                            :key="t.id"
-                            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-gray-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/40"
-                        >
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <h4 class="text-sm font-bold text-gray-900 dark:text-slate-100">
-                                        {{ t.nomor_invoice || 'Tagihan Biaya' }}
-                                    </h4>
-                                    <span
-                                        :class="[
-                                            'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase',
-                                            t.status === 'PAID' || t.status === 'LUNAS'
-                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                                        ]"
-                                    >
-                                        {{ t.status }}
-                                    </span>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-slate-400">
-                                    Jatuh Tempo: {{ formatDate(t.due_date) }}
-                                </p>
                             </div>
                         </div>
                     </div>

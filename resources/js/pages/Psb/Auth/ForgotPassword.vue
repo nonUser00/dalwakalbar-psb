@@ -3,6 +3,7 @@ defineOptions({ layout: GuestLayout });
 import { Head, Link } from '@inertiajs/vue3';
 import BackButton from '@/Components/BackButton.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import { formatWaUrl } from '@/lib/utils';
 import { login } from '@/routes/psb';
 
 defineProps<{
@@ -85,7 +86,7 @@ defineProps<{
 
                     <a
                         v-if="kontak_darurat_wa"
-                        :href="`https://wa.me/${kontak_darurat_wa}`"
+                        :href="formatWaUrl(kontak_darurat_wa, 'Assalamu\'alaikum Panitia PSB Dalwa Kalbar, saya membutuhkan bantuan reset password akun pendaftaran santri.')"
                         target="_blank"
                         class="inline-flex w-full items-center justify-center rounded-xl bg-green-500 px-8 py-4 text-[15px] font-bold text-white shadow-[0_8px_30px_rgb(34,197,94,0.2)] transition-all duration-300 hover:bg-green-600 hover:shadow-[0_8px_30px_rgb(34,197,94,0.4)]"
                     >

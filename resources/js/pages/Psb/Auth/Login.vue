@@ -11,7 +11,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { login, register } from '@/routes/psb';
 
-import { formatHariKerja } from '@/lib/utils';
+import { formatHariKerja, formatWaUrl } from '@/lib/utils';
 
 const page = usePage();
 const appSettings = computed(() => (page.props as any).app_settings || {});
@@ -300,8 +300,8 @@ const submit = () => {
                         Tutup
                     </SecondaryButton>
                     <a
-                        v-if="kontkWaClean = kontakWa.replace(/[^0-9]/g, '')"
-                        :href="`https://wa.me/${kontkWaClean.startsWith('0') ? '62' + kontkWaClean.slice(1) : kontkWaClean}?text=Assalamu%27alaikum%20Panitia%20PSB,%20saya%20membutuhkan%20bantuan%20reset%20password%20akun%20calon%20santri.`"
+                        v-if="kontkWa"
+                        :href="formatWaUrl(kontkWa, 'Assalamu\'alaikum Panitia PSB, saya membutuhkan bantuan reset password akun calon santri.')"
                         target="_blank"
                         class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 focus:outline-none"
                     >

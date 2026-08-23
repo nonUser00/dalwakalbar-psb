@@ -284,6 +284,8 @@ const educationData = ref({
     tipe_sekolah_asal: props.pendaftar.education_data?.tipe_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe || 'Umum',
     pendidikan_pendaftar_id: getInitialPendidikanPendaftarId(),
     jenjang_sekolah_asal: props.pendaftar.education_data?.jenjang_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.jenjang || '',
+    fakultas_sebelumnya: props.pendaftar.education_data?.fakultas_sebelumnya || props.pendaftar.education_data?.fakultas_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.fakultas || '',
+    prodi_sebelumnya: props.pendaftar.education_data?.prodi_sebelumnya || props.pendaftar.education_data?.prodi_asal || props.pendaftar.education_data?.jurusan_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.prodi || '',
     tingkat_sebelumnya_id: getInitialTingkatSebelumnyaId(),
     tingkat_sebelumnya: props.pendaftar.education_data?.tingkat_sebelumnya || props.pendaftar.education_data?.pendidikan_sebelumnya?.tingkat || '',
     npsn_sekolah_asal: props.pendaftar.education_data?.npsn_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.npsn || props.pendaftar.education_data?.npsn || '',
@@ -616,8 +618,26 @@ const isJenjangMa = computed(() => {
 
 const isJenjangPerguruanTinggi = computed(() => {
     const code = (selectedJenjang.value?.code || selectedJenjang.value?.kode || '').toUpperCase();
+    const name = (selectedJenjang.value?.name || '').toLowerCase();
 
-    return code === 'S1' || code === 'S2' || code === 'S3' || code.includes('SARJANA');
+    return code === 'S1' || code === 'S2' || code === 'S3' || name.includes('sarjana') || name.includes('magister') || name.includes('doktor') || name.includes('pasca');
+});
+
+const isJenjangPascasarjana = computed(() => {
+    const code = (selectedJenjang.value?.code || selectedJenjang.value?.kode || '').toUpperCase();
+    const name = (selectedJenjang.value?.name || '').toLowerCase();
+
+    return code === 'S2' || code === 'S3' || name.includes('s2') || name.includes('s3') || name.includes('magister') || name.includes('doktor') || name.includes('pasca');
+});
+
+const requiresPreviousFacultyAndProdi = computed(() => {
+    if (isJenjangPascasarjana.value) {
+        return true;
+    }
+    if (educationData.value.tipe_pendaftaran === 'Pindahan' && educationData.value.tipe_sekolah_asal === 'Perguruan Tinggi') {
+        return true;
+    }
+    return false;
 });
 
 // Tingkat Tujuan Options (from /admin/akademik/program -> Jenjang tingkats)
@@ -632,46 +652,26 @@ return [];
     }));
 });
 
-// Watch Jenjang and Tipe to maintain proper default levels
-watch(
-    () => [educationData.value.jenjang_id, educationData.value.tipe_pendaftaran],
-    ([newJenjangId, newTipe]) => {
-        if (!newJenjangId) {
-return;
-}
-
-        const j = props.masterData.jenjangs.find((item) => item.id === newJenjangId);
-
-        if (!j) {
-return;
-}
-
-        if (newTipe === 'Reguler') {
-            if (j.tingkats && j.tingkats.length > 0) {
-                educationData.value.tingkat_id = j.tingkats[0].id;
-                educationData.value.tingkat_nama = j.tingkats[0].name;
-            }
-        }
-    },
-    { immediate: true },
-);
-
 // Jurusan MA Options (from /admin/akademik/program -> Jurusans)
 const jurusanMaOptions = computed(() => {
-    if (selectedJenjang.value?.jurusans && selectedJenjang.value.jurusans.length > 0) {
-        return selectedJenjang.value.jurusans.map((j: any) => ({
-            value: j.id,
-            label: `${j.code ? j.code + ' - ' : ''}${j.name}`,
-        }));
-    }
+    const rawJurusans = selectedJenjang.value?.jurusans && selectedJenjang.value.jurusans.length > 0
+        ? selectedJenjang.value.jurusans
+        : (props.masterData.jurusans || []).filter((j) => !j.jenjang_id || j.jenjang_id === educationData.value.jenjang_id);
 
-    if (!props.masterData.jurusans) {
-return [];
-}
+    const gender = (personalData.value.jenis_kelamin || props.pendaftar.gender || props.pendaftar.personal_data?.jenis_kelamin || '').toLowerCase();
+    const isMale = gender.includes('laki') || gender === 'l';
+    const isFemale = gender.includes('perempuan') || gender === 'p';
 
-    return props.masterData.jurusans
-        .filter((j) => !j.jenjang_id || j.jenjang_id === educationData.value.jenjang_id)
-        .map((j) => ({
+    return rawJurusans
+        .filter((j: any) => {
+            const allowed = j.gender_allowed || 'ALL';
+            if (allowed === 'ALL') return true;
+            if (isMale && (allowed === 'L' || allowed === 'ALL')) return true;
+            if (isFemale && (allowed === 'P' || allowed === 'ALL')) return true;
+            if (!isMale && !isFemale) return true;
+            return false;
+        })
+        .map((j: any) => ({
             value: j.id,
             label: `${j.code ? j.code + ' - ' : ''}${j.name}`,
         }));
@@ -679,16 +679,27 @@ return [];
 
 // Fakultas Options (from /admin/akademik/program -> Fakultas)
 const fakultasOptions = computed(() => {
-    if (selectedJenjang.value?.fakultas && selectedJenjang.value.fakultas.length > 0) {
-        return selectedJenjang.value.fakultas.map((f: any) => ({
-            value: f.id,
-            label: `${f.code ? f.code + ' - ' : ''}${f.name}`,
-        }));
-    }
+    const rawFakultas = (selectedJenjang.value?.fakultas && selectedJenjang.value.fakultas.length > 0)
+        ? selectedJenjang.value.fakultas
+        : (props.masterData.fakultas || []).filter((f) => !f.jenjang_id || f.jenjang_id === educationData.value.jenjang_id);
 
-    return props.masterData.fakultas
-        .filter((f) => !f.jenjang_id || f.jenjang_id === educationData.value.jenjang_id)
-        .map((f) => ({
+    const gender = (personalData.value.jenis_kelamin || props.pendaftar.gender || props.pendaftar.personal_data?.jenis_kelamin || '').toLowerCase();
+    const isMale = gender.includes('laki') || gender === 'l';
+    const isFemale = gender.includes('perempuan') || gender === 'p';
+
+    return rawFakultas
+        .filter((f: any) => {
+            if (!f.prodis || f.prodis.length === 0) return true;
+            if (!isMale && !isFemale) return true;
+            return f.prodis.some((p: any) => {
+                const allowed = p.gender_allowed || 'ALL';
+                if (allowed === 'ALL') return true;
+                if (isMale && (allowed === 'L' || allowed === 'ALL')) return true;
+                if (isFemale && (allowed === 'P' || allowed === 'ALL')) return true;
+                return false;
+            });
+        })
+        .map((f: any) => ({
             value: f.id,
             label: `${f.code ? f.code + ' - ' : ''}${f.name}`,
         }));
@@ -697,36 +708,213 @@ const fakultasOptions = computed(() => {
 // Prodi by Fakultas
 const getProdiByFakultas = (fakultasId: string) => {
     if (!fakultasId) {
-return [];
-}
+        return [];
+    }
 
     const f = props.masterData.fakultas.find((item) => item.id === fakultasId);
 
     if (!f || !f.prodis) {
-return [];
-}
+        return [];
+    }
 
-    return f.prodis.map((p: any) => ({
-        value: p.id,
-        label: `${p.code ? p.code + ' - ' : ''}${p.name}`,
-    }));
+    const gender = (personalData.value.jenis_kelamin || props.pendaftar.gender || props.pendaftar.personal_data?.jenis_kelamin || '').toLowerCase();
+    const isMale = gender.includes('laki') || gender === 'l';
+    const isFemale = gender.includes('perempuan') || gender === 'p';
+
+    return f.prodis
+        .filter((p: any) => {
+            const allowed = p.gender_allowed || 'ALL';
+            if (allowed === 'ALL') return true;
+            if (isMale && (allowed === 'L' || allowed === 'ALL')) return true;
+            if (isFemale && (allowed === 'P' || allowed === 'ALL')) return true;
+            if (!isMale && !isFemale) return true;
+            return false;
+        })
+        .map((p: any) => ({
+            value: p.id,
+            label: `${p.code ? p.code + ' - ' : ''}${p.name}`,
+        }));
 };
 
 // ========================================================
 // PENDIDIKAN SEBELUMNYA (From /admin/master/pendidikan-sebelumnya)
 // ========================================================
-const tipeSekolahAsalOptions = [
-    { value: 'Umum', label: 'Umum' },
-    { value: 'Pondok Pesantren', label: 'Pondok Pesantren' },
-];
+// 3 Tipe Master: Sekolah Umum (Umum), Madrasah (Madrasah), Perguruan Tinggi (Perguruan Tinggi)
+const tipeSekolahAsalOptions = computed(() => {
+    const code = (selectedJenjang.value?.code || selectedJenjang.value?.kode || '').toUpperCase();
+    const jenjangName = (selectedJenjang.value?.name || '').toLowerCase();
+    const isPindahan = educationData.value.tipe_pendaftaran === 'Pindahan';
+
+    // Untuk Pascasarjana (S2 / S3) - Baik Reguler maupun Pindahan
+    if (code === 'S2' || code === 'S3' || jenjangName.includes('s2') || jenjangName.includes('s3') || jenjangName.includes('magister') || jenjangName.includes('doktor') || jenjangName.includes('pasca')) {
+        return [
+            { value: 'Perguruan Tinggi', label: 'Perguruan Tinggi' },
+        ];
+    }
+
+    // Untuk Strata 1 (S1)
+    if (code === 'S1' || isJenjangPerguruanTinggi.value) {
+        if (isPindahan) {
+            // Pindahan S1 adalah transfer antar Perguruan Tinggi
+            return [
+                { value: 'Perguruan Tinggi', label: 'Perguruan Tinggi' },
+            ];
+        }
+        // S1 Reguler adalah lulusan SMA / MA
+        return [
+            { value: 'Umum', label: 'Sekolah Umum' },
+            { value: 'Madrasah', label: 'Madrasah' },
+        ];
+    }
+
+    // Untuk MTs dan MA (Baik Reguler maupun Pindahan)
+    return [
+        { value: 'Umum', label: 'Sekolah Umum' },
+        { value: 'Madrasah', label: 'Madrasah' },
+    ];
+});
+
+const isPendidikanSd = (name: string) => /\b(sd|dasar)\b/i.test(name) || name.includes('(SD)');
+const isPendidikanSmp = (name: string) => /\b(smp|pertama)\b/i.test(name) || name.includes('(SMP)');
+const isPendidikanSma = (name: string) => /\b(sma|smk|atas|slta)\b/i.test(name) || name.includes('(SMA') || name.includes('(SMK');
+const isPendidikanMi = (name: string) => /\bibtidaiyah\b/i.test(name) || name.includes('(MI)');
+const isPendidikanMts = (name: string) => /\btsanawiyah\b/i.test(name) || name.includes('(MTs)');
+const isPendidikanMa = (name: string) => /\baliyah\b/i.test(name) || name.includes('(MA)');
+const isPendidikanS1 = (name: string) => /\b(sarjana|s1|d3|diploma)\b/i.test(name) || name.includes('(S1)');
+const isPendidikanS2 = (name: string) => /\b(magister|s2)\b/i.test(name) || name.includes('(S2)');
+const isPendidikanS3 = (name: string) => /\b(doktor|s3)\b/i.test(name) || name.includes('(S3)');
 
 const pendidikanSebelumnyaOptions = computed(() => {
-    return props.masterData.pendidikan_pendaftars
-        .filter((p) => p.tipe === educationData.value.tipe_sekolah_asal)
-        .map((p) => ({
+    const list = props.masterData.pendidikan_pendaftars.filter(
+        (p) => p.tipe === educationData.value.tipe_sekolah_asal,
+    );
+
+    const isReguler = educationData.value.tipe_pendaftaran === 'Reguler';
+    const isPindahan = educationData.value.tipe_pendaftaran === 'Pindahan';
+    const code = (selectedJenjang.value?.code || selectedJenjang.value?.kode || '').toUpperCase();
+    const jenjangName = (selectedJenjang.value?.name || '').toLowerCase();
+
+    // S2 (Magister)
+    if (code === 'S2' || jenjangName.includes('s2') || jenjangName.includes('magister')) {
+        const filtered = list.filter((p) => {
+            const name = p.name || '';
+            if (isPindahan) {
+                // Pindahan S2: Sesama Magister (S2)
+                return isPendidikanS2(name);
+            }
+            // Reguler S2: Dari Sarjana (S1)
+            return isPendidikanS1(name);
+        });
+        return (filtered.length > 0 ? filtered : list).map((p) => ({
             value: p.id,
             label: p.name,
         }));
+    }
+
+    // S3 (Doktor)
+    if (code === 'S3' || jenjangName.includes('s3') || jenjangName.includes('doktor')) {
+        const filtered = list.filter((p) => {
+            const name = p.name || '';
+            if (isPindahan) {
+                // Pindahan S3: Sesama Doktor (S3) atau Magister (S2)
+                return isPendidikanS3(name) || isPendidikanS2(name);
+            }
+            // Reguler S3: Dari Magister (S2)
+            return isPendidikanS2(name);
+        });
+        return (filtered.length > 0 ? filtered : list).map((p) => ({
+            value: p.id,
+            label: p.name,
+        }));
+    }
+
+    // S1 (Sarjana)
+    if (code === 'S1' || isJenjangPerguruanTinggi.value) {
+        const filtered = list.filter((p) => {
+            const name = p.name || '';
+            if (isPindahan) {
+                // Pindahan S1: Dari Perguruan Tinggi Sarjana (S1) / Diploma (D3)
+                return isPendidikanS1(name);
+            }
+            // Reguler S1: Dari SMA/SMK (Umum) atau MA (Madrasah)
+            if (educationData.value.tipe_sekolah_asal === 'Umum') {
+                return isPendidikanSma(name);
+            }
+            if (educationData.value.tipe_sekolah_asal === 'Madrasah') {
+                return isPendidikanMa(name);
+            }
+            return true;
+        });
+        return (filtered.length > 0 ? filtered : list).map((p) => ({
+            value: p.id,
+            label: p.name,
+        }));
+    }
+
+    // MTs (Tsanawiyah)
+    if (isJenjangMts.value) {
+        const filtered = list.filter((p) => {
+            const name = p.name || '';
+            if (isPindahan) {
+                // Pindahan MTs: Setingkat, yaitu SMP (Umum) atau MTs (Madrasah)
+                if (educationData.value.tipe_sekolah_asal === 'Umum') {
+                    return isPendidikanSmp(name);
+                }
+                if (educationData.value.tipe_sekolah_asal === 'Madrasah') {
+                    return isPendidikanMts(name);
+                }
+            } else {
+                // Reguler MTs: Dari jenjang bawahnya, yaitu SD (Umum) atau MI (Madrasah)
+                if (educationData.value.tipe_sekolah_asal === 'Umum') {
+                    return isPendidikanSd(name);
+                }
+                if (educationData.value.tipe_sekolah_asal === 'Madrasah') {
+                    return isPendidikanMi(name);
+                }
+            }
+            return true;
+        });
+
+        return (filtered.length > 0 ? filtered : list).map((p) => ({
+            value: p.id,
+            label: p.name,
+        }));
+    }
+
+    // MA (Aliyah)
+    if (isJenjangMa.value) {
+        const filtered = list.filter((p) => {
+            const name = p.name || '';
+            if (isPindahan) {
+                // Pindahan MA: Setingkat, yaitu SMA/SMK (Umum) atau MA (Madrasah)
+                if (educationData.value.tipe_sekolah_asal === 'Umum') {
+                    return isPendidikanSma(name);
+                }
+                if (educationData.value.tipe_sekolah_asal === 'Madrasah') {
+                    return isPendidikanMa(name);
+                }
+            } else {
+                // Reguler MA: Dari jenjang bawahnya, yaitu SMP (Umum) atau MTs (Madrasah)
+                if (educationData.value.tipe_sekolah_asal === 'Umum') {
+                    return isPendidikanSmp(name);
+                }
+                if (educationData.value.tipe_sekolah_asal === 'Madrasah') {
+                    return isPendidikanMts(name);
+                }
+            }
+            return true;
+        });
+
+        return (filtered.length > 0 ? filtered : list).map((p) => ({
+            value: p.id,
+            label: p.name,
+        }));
+    }
+
+    return list.map((p) => ({
+        value: p.id,
+        label: p.name,
+    }));
 });
 
 const selectedPendidikanSebelumnya = computed(() => {
@@ -737,8 +925,8 @@ const selectedPendidikanSebelumnya = computed(() => {
 
 const tingkatSebelumnyaOptions = computed(() => {
     if (!selectedPendidikanSebelumnya.value?.tingkats) {
-return [];
-}
+        return [];
+    }
 
     return selectedPendidikanSebelumnya.value.tingkats.map((t: any) => ({
         value: t.id,
@@ -754,11 +942,15 @@ const onTipeSekolahAsalChange = (newTipe: string) => {
     educationData.value.tingkat_sebelumnya_id = '';
     educationData.value.tingkat_sebelumnya = '';
 
-    const list = props.masterData.pendidikan_pendaftars?.filter((p) => p.tipe === newTipe) || [];
-
-    if (list.length > 0) {
-        onPendidikanSebelumnyaChange(list[0].id);
+    if (newTipe !== 'Madrasah') {
+        educationData.value.nsm_sekolah_asal = '';
     }
+
+    setTimeout(() => {
+        if (pendidikanSebelumnyaOptions.value.length > 0) {
+            onPendidikanSebelumnyaChange(pendidikanSebelumnyaOptions.value[0].value);
+        }
+    }, 0);
 };
 
 const onPendidikanSebelumnyaChange = (pendidikanId: string) => {
@@ -808,6 +1000,18 @@ const setTipePendaftaran = (tipe: string) => {
     if (isLocked.value) return;
     educationData.value.tipe_pendaftaran = tipe;
 
+    // Reset tipe_sekolah_asal if current is not in allowed list
+    const validTipe = tipeSekolahAsalOptions.value.some((t) => t.value === educationData.value.tipe_sekolah_asal);
+    if (!validTipe && tipeSekolahAsalOptions.value.length > 0) {
+        educationData.value.tipe_sekolah_asal = tipeSekolahAsalOptions.value[0].value;
+    }
+
+    // Reset pendidikan_pendaftar_id if current is not in allowed list
+    const validPend = pendidikanSebelumnyaOptions.value.some((p) => p.value === educationData.value.pendidikan_pendaftar_id);
+    if (!validPend && pendidikanSebelumnyaOptions.value.length > 0) {
+        onPendidikanSebelumnyaChange(pendidikanSebelumnyaOptions.value[0].value);
+    }
+
     if (tipe === 'Reguler') {
         if (selectedJenjang.value?.tingkats && selectedJenjang.value.tingkats.length > 0) {
             educationData.value.tingkat_id = selectedJenjang.value.tingkats[0].id;
@@ -818,6 +1022,14 @@ const setTipePendaftaran = (tipe: string) => {
             const lastTingkat = selectedPendidikanSebelumnya.value.tingkats[selectedPendidikanSebelumnya.value.tingkats.length - 1];
             educationData.value.tingkat_sebelumnya_id = lastTingkat.id;
             educationData.value.tingkat_sebelumnya = lastTingkat.name;
+        }
+    } else if (tipe === 'Pindahan') {
+        educationData.value.no_ijazah = '';
+        educationData.value.tahun_lulus = '';
+
+        if (selectedPendidikanSebelumnya.value?.tingkats && selectedPendidikanSebelumnya.value.tingkats.length > 0) {
+            educationData.value.tingkat_sebelumnya_id = selectedPendidikanSebelumnya.value.tingkats[0].id;
+            educationData.value.tingkat_sebelumnya = selectedPendidikanSebelumnya.value.tingkats[0].name;
         }
     }
 };
@@ -831,6 +1043,42 @@ const onJurusanChange = (jurusanId: string) => {
         educationData.value.jurusan_nama = j.label;
     }
 };
+
+// Watch Jenjang and Tipe to maintain proper default levels and previous school options
+watch(
+    () => [educationData.value.jenjang_id, educationData.value.tipe_pendaftaran],
+    ([newJenjangId, newTipe]) => {
+        if (!newJenjangId) {
+            return;
+        }
+
+        const j = props.masterData.jenjangs?.find((item) => item.id === newJenjangId);
+
+        if (!j) {
+            return;
+        }
+
+        if (newTipe === 'Reguler') {
+            if (j.tingkats && j.tingkats.length > 0) {
+                educationData.value.tingkat_id = j.tingkats[0].id;
+                educationData.value.tingkat_nama = j.tingkats[0].name;
+            }
+        }
+
+        // Validate tipe_sekolah_asal against allowed options
+        const validTipe = tipeSekolahAsalOptions.value.some((t) => t.value === educationData.value.tipe_sekolah_asal);
+        if (!validTipe && tipeSekolahAsalOptions.value.length > 0) {
+            educationData.value.tipe_sekolah_asal = tipeSekolahAsalOptions.value[0].value;
+        }
+
+        // Validate pendidikan_pendaftar_id against allowed options
+        const validPend = pendidikanSebelumnyaOptions.value.some((p) => p.value === educationData.value.pendidikan_pendaftar_id);
+        if (!validPend && pendidikanSebelumnyaOptions.value.length > 0) {
+            onPendidikanSebelumnyaChange(pendidikanSebelumnyaOptions.value[0].value);
+        }
+    },
+    { immediate: true },
+);
 
 const bothParentsDeceased = computed(() => {
     return !isAyahHidup.value && !isIbuHidup.value;
@@ -902,24 +1150,32 @@ const isStep4Complete = computed(() => {
     const d = educationData.value;
 
     if (!d.tipe_pendaftaran || !d.jenjang_id) {
-return false;
-}
+        return false;
+    }
 
     if ((isJenjangMts.value || isJenjangMa.value) && d.tipe_pendaftaran === 'Pindahan' && !d.tingkat_id) {
-return false;
-}
+        return false;
+    }
 
     if (isJenjangMa.value && !d.jurusan_id) {
-return false;
-}
+        return false;
+    }
 
     if (isJenjangPerguruanTinggi.value && (!d.fakultas_utama_id || !d.prodi_utama_id)) {
-return false;
-}
+        return false;
+    }
+
+    if (requiresPreviousFacultyAndProdi.value && (!d.fakultas_sebelumnya || !d.prodi_sebelumnya)) {
+        return false;
+    }
 
     if (!d.nama_sekolah_asal || !d.nisn || !d.tipe_sekolah_asal || !d.pendidikan_pendaftar_id) {
-return false;
-}
+        return false;
+    }
+
+    if (d.tipe_pendaftaran === 'Pindahan' && !d.tingkat_sebelumnya_id && !d.tingkat_sebelumnya) {
+        return false;
+    }
 
     return true;
 });
@@ -1226,27 +1482,36 @@ errors.value.prodi_utama_id = 'Program studi pilihan utama wajib dipilih.';
 
         // Asal Sekolah (from /admin/master/pendidikan-sebelumnya)
         if (!educationData.value.nama_sekolah_asal) {
-errors.value.nama_sekolah_asal = 'Nama sekolah/madrasah asal wajib diisi.';
-}
+            errors.value.nama_sekolah_asal = 'Nama sekolah/madrasah/kampus asal wajib diisi.';
+        }
 
         if (!educationData.value.nisn) {
-errors.value.nisn = 'NISN wajib diisi.';
-}
-
-        if (educationData.value.nisn && educationData.value.nisn.length < 10) {
-errors.value.nisn = 'NISN minimal 10 digit.';
-}
+            errors.value.nisn = educationData.value.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Nomor Induk Mahasiswa (NIM) wajib diisi.' : 'NISN wajib diisi.';
+        } else if (educationData.value.tipe_sekolah_asal !== 'Perguruan Tinggi' && educationData.value.nisn.length < 10) {
+            errors.value.nisn = 'NISN minimal 10 digit.';
+        }
 
         if (!educationData.value.tipe_sekolah_asal) {
-errors.value.tipe_sekolah_asal = 'Tipe sekolah asal wajib dipilih.';
-}
+            errors.value.tipe_sekolah_asal = 'Tipe institusi pendidikan asal wajib dipilih.';
+        }
 
         if (!educationData.value.pendidikan_pendaftar_id) {
-errors.value.pendidikan_pendaftar_id = 'Jenjang sekolah asal wajib dipilih.';
-}
+            errors.value.pendidikan_pendaftar_id = 'Jenjang pendidikan asal wajib dipilih.';
+        }
 
-        if (!educationData.value.tingkat_sebelumnya_id && !educationData.value.tingkat_sebelumnya) {
-            errors.value.tingkat_sebelumnya_id = 'Tingkat / kelas sebelumnya wajib dipilih.';
+        if (requiresPreviousFacultyAndProdi.value) {
+            if (!educationData.value.fakultas_sebelumnya) {
+                errors.value.fakultas_sebelumnya = 'Fakultas sebelumnya wajib diisi.';
+            }
+            if (!educationData.value.prodi_sebelumnya) {
+                errors.value.prodi_sebelumnya = 'Program studi sebelumnya wajib diisi.';
+            }
+        }
+
+        if (educationData.value.tipe_pendaftaran === 'Pindahan') {
+            if (tingkatSebelumnyaOptions.value.length > 0 && !educationData.value.tingkat_sebelumnya_id && !educationData.value.tingkat_sebelumnya) {
+                errors.value.tingkat_sebelumnya_id = educationData.value.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Semester / tingkat sebelumnya wajib dipilih.' : 'Tingkat / kelas sebelumnya wajib dipilih.';
+            }
         }
     }
 
@@ -1821,7 +2086,7 @@ const progressPercentage = computed(() => {
                                 <TextInput
                                     v-model="personalData.email"
                                     type="email"
-                                    label="Email (Opsional)"
+                                    label="Email"
                                     :error="errors.email"
                                     placeholder="nama@email.com"
                                 />
@@ -1970,7 +2235,7 @@ const progressPercentage = computed(() => {
                                         <TextInput
                                             v-model="parentData.email_ayah"
                                             type="email"
-                                            label="Email Ayah (Opsional)"
+                                            label="Email Ayah"
                                             placeholder="email@ayah.com"
                                         />
 
@@ -2103,7 +2368,7 @@ const progressPercentage = computed(() => {
                                         <TextInput
                                             v-model="parentData.email_ibu"
                                             type="email"
-                                            label="Email Ibu (Opsional)"
+                                            label="Email Ibu"
                                             placeholder="email@ibu.com"
                                         />
 
@@ -2173,7 +2438,6 @@ const progressPercentage = computed(() => {
                                     <h3 class="text-lg font-bold text-gray-900 dark:text-slate-100">
                                         Data Wali Santri
                                         <span v-if="bothParentsDeceased" class="text-rose-500 text-xs font-semibold">(Wajib Diisi - Orang Tua Meninggal)</span>
-                                        <span v-else class="text-gray-400 text-xs font-normal">(Opsional)</span>
                                     </h3>
                                     <p class="text-xs sm:text-sm text-gray-500 dark:text-slate-400">
                                         Diisi jika santri diasuh atau tinggal bersama wali selain orang tua kandung.
@@ -2247,7 +2511,7 @@ const progressPercentage = computed(() => {
                                 <TextInput
                                     v-model="parentData.email_wali"
                                     type="email"
-                                    label="Email Wali (Opsional)"
+                                    label="Email Wali"
                                     placeholder="email@wali.com"
                                 />
 
@@ -2801,35 +3065,19 @@ const progressPercentage = computed(() => {
                                         Data Riwayat Pendidikan Sebelumnya
                                     </h3>
                                     <p class="text-sm text-gray-500 dark:text-slate-400">
-                                        Riwayat jenjang dan institusi sekolah asal santri terintegrasi dengan database master.
+                                        Riwayat jenjang dan institusi sekolah/madrasah asal santri terintegrasi dengan database master.
                                     </p>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <TextInput
-                                    v-model="educationData.nama_sekolah_asal"
-                                    label="Nama Sekolah / Madrasah Asal"
-                                    required
-                                    :error="errors.nama_sekolah_asal"
-                                    placeholder="Contoh: SMP Negeri 1 Pontianak / MTs Al-Falah"
-                                />
-
-                                <TextInput
-                                    v-model="educationData.nisn"
-                                    label="Nomor Induk Siswa Nasional (NISN)"
-                                    required
-                                    maxlength="10"
-                                    :error="errors.nisn"
-                                    placeholder="10 digit nomor NISN"
-                                />
-
                                 <CustomSelect
                                     :model-value="educationData.tipe_sekolah_asal"
-                                    label="Tipe Sekolah Asal"
+                                    label="Tipe Institusi Pendidikan Asal"
                                     required
                                     :options="tipeSekolahAsalOptions"
                                     :error="errors.tipe_sekolah_asal"
+                                    placeholder="-- Pilih Tipe Institusi Asal --"
                                     @update:model-value="onTipeSekolahAsalChange"
                                 />
 
@@ -2839,53 +3087,91 @@ const progressPercentage = computed(() => {
                                     required
                                     :options="pendidikanSebelumnyaOptions"
                                     :error="errors.pendidikan_pendaftar_id"
-                                    placeholder="-- Pilih Jenjang Sekolah Asal --"
+                                    placeholder="-- Pilih Jenjang Pendidikan Asal --"
                                     :disabled="!educationData.tipe_sekolah_asal"
                                     @update:model-value="onPendidikanSebelumnyaChange"
                                 />
 
+                                <TextInput
+                                    v-model="educationData.nama_sekolah_asal"
+                                    :label="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Nama Perguruan Tinggi / Kampus Asal' : (educationData.tipe_sekolah_asal === 'Madrasah' ? 'Nama Madrasah / Pondok Asal' : 'Nama Sekolah Asal')"
+                                    required
+                                    :error="errors.nama_sekolah_asal"
+                                    :placeholder="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Contoh: Universitas Indonesia / UIN Syarif Hidayatullah' : (educationData.tipe_sekolah_asal === 'Madrasah' ? 'Contoh: MTs Al-Falah / MIS Nurul Huda' : 'Contoh: SMP Negeri 1 Pontianak / SD Negeri 05')"
+                                />
+
+                                <TextInput
+                                    v-model="educationData.nisn"
+                                    :label="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Nomor Induk Mahasiswa (NIM / NPM)' : 'Nomor Induk Siswa Nasional (NISN)'"
+                                    required
+                                    :maxlength="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 30 : 10"
+                                    :error="errors.nisn"
+                                    :placeholder="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Nomor Induk Mahasiswa asal' : '10 digit nomor NISN'"
+                                />
+
+                                <template v-if="requiresPreviousFacultyAndProdi">
+                                    <TextInput
+                                        v-model="educationData.fakultas_sebelumnya"
+                                        label="Fakultas Sebelumnya"
+                                        required
+                                        :error="errors.fakultas_sebelumnya"
+                                        placeholder="Contoh: Fakultas Tarbiyah / Fakultas Ilmu Pendidikan"
+                                    />
+
+                                    <TextInput
+                                        v-model="educationData.prodi_sebelumnya"
+                                        label="Program Studi Sebelumnya"
+                                        required
+                                        :error="errors.prodi_sebelumnya"
+                                        placeholder="Contoh: Pendidikan Agama Islam / Manajemen Pendidikan"
+                                    />
+                                </template>
+
                                 <CustomSelect
+                                    v-if="educationData.tipe_pendaftaran === 'Pindahan'"
                                     :model-value="educationData.tingkat_sebelumnya_id"
-                                    label="Tingkat / Kelas Terakhir Sebelumnya"
+                                    :label="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? 'Semester / Tingkat Terakhir Sebelumnya' : 'Tingkat / Kelas Terakhir Sebelumnya'"
                                     required
                                     :options="tingkatSebelumnyaOptions"
                                     :error="errors.tingkat_sebelumnya_id"
-                                    placeholder="-- Pilih Tingkat / Kelas Sebelumnya --"
+                                    :placeholder="educationData.tipe_sekolah_asal === 'Perguruan Tinggi' ? '-- Pilih Semester Terakhir --' : '-- Pilih Tingkat / Kelas Sebelumnya --'"
                                     :disabled="!educationData.pendidikan_pendaftar_id"
                                     @update:model-value="onTingkatSebelumnyaChange"
                                 />
 
                                 <TextInput
-                                    v-model="educationData.npsn_sekolah_asal"
-                                    label="NPSN Sekolah Asal (Opsional)"
-                                    maxlength="8"
-                                    placeholder="8 digit nomor NPSN"
-                                />
-
-                                <TextInput
-                                    v-if="educationData.tipe_sekolah_asal === 'Pondok Pesantren'"
+                                    v-if="educationData.tipe_sekolah_asal === 'Madrasah'"
                                     v-model="educationData.nsm_sekolah_asal"
-                                    label="NSM Madrasah Asal (Opsional)"
-                                    placeholder="Nomor Statistik Madrasah"
+                                    label="NSM"
+                                    placeholder="12 digit NSM madrasah"
                                 />
 
                                 <TextInput
-                                    v-model="educationData.no_ijazah"
-                                    label="Nomor Seri Ijazah / SKL (Opsional)"
-                                    placeholder="Contoh: DN-01/D-SD/13/0012345"
+                                    v-model="educationData.npsn_sekolah_asal"
+                                    label="NPSN"
+                                    maxlength="8"
+                                    placeholder="8 digit nomor NPSN / Kode PT"
                                 />
 
-                                <TextInput
-                                    v-model="educationData.tahun_lulus"
-                                    label="Tahun Kelulusan"
-                                    placeholder="Contoh: 2026"
-                                />
+                                <template v-if="educationData.tipe_pendaftaran === 'Reguler'">
+                                    <TextInput
+                                        v-model="educationData.no_ijazah"
+                                        label="Nomor Seri Ijazah / SKL"
+                                        placeholder="Contoh: DN-01/D-SD/13/0012345 (Kosongkan jika belum terbit)"
+                                    />
+
+                                    <TextInput
+                                        v-model="educationData.tahun_lulus"
+                                        label="Tahun Kelulusan"
+                                        placeholder="Contoh: 2026"
+                                    />
+                                </template>
 
                                 <div class="md:col-span-2">
                                     <TextareaInput
                                         v-model="educationData.alamat_sekolah_asal"
-                                        label="Alamat Sekolah Asal"
-                                        placeholder="Alamat lengkap lokasi sekolah/madrasah asal"
+                                        label="Alamat Lengkap / Kota Institusi Asal"
+                                        placeholder="Alamat lengkap atau kota lokasi sekolah/madrasah/kampus asal"
                                         :rows="3"
                                     />
                                 </div>

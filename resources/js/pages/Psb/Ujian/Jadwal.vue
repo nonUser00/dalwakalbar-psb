@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import PsbLayout from '@/Layouts/PsbLayout.vue';
-import { formatHariKerja } from '@/lib/utils';
+import { formatHariKerja, formatWaNumber, formatWaUrl } from '@/lib/utils';
 
 defineOptions({ layout: PsbLayout });
 
@@ -78,9 +78,7 @@ const jamKerjaText = computed(() => {
 });
 
 const cleanWaNumber = computed(() => {
-    const raw = props.kontak?.wa || '081234567890';
-    const cleaned = raw.replace(/[^0-9]/g, '');
-    return cleaned.startsWith('0') ? '62' + cleaned.slice(1) : cleaned;
+    return formatWaNumber(props.kontak?.wa || '081234567890');
 });
 
 const primaryKelompok = computed(() => {
@@ -823,7 +821,7 @@ const defaultMateriList = [
                     </div>
 
                     <a
-                        :href="`https://wa.me/${cleanWaNumber}?text=Assalamu%27alaikum%20Panitia%20PSB%20Dalwa%20Kalbar,%20saya%20${encodeURIComponent(props.pendaftar?.nama || '')}%20(No.%20Reg:%20${encodeURIComponent(props.pendaftar?.nomor_pendaftaran || '-')})%20ingin%20menanyakan%20perihal%20jadwal%20ujian.`"
+                        :href="formatWaUrl(props.kontak?.wa || '081234567890', `Assalamu'alaikum Panitia PSB Dalwa Kalbar, saya ${props.pendaftar?.nama || ''} (No. Reg: ${props.pendaftar?.nomor_pendaftaran || '-'}) ingin menanyakan perihal jadwal ujian.`)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-2xs transition-all hover:bg-emerald-700"

@@ -74,7 +74,7 @@ class SubmitPendaftarExport extends DefaultValueBinder implements FromCollection
 
     public function collection()
     {
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->where('status', 'SUBMITTED')
             ->with(['cabang', 'jenjang', 'periode.tahunAkademik', 'gelombang']);
 
@@ -189,16 +189,21 @@ class SubmitPendaftarExport extends DefaultValueBinder implements FromCollection
         // Generate detail pilihan according to jenjang (MTs, MA, S1, S2, S3)
         $detailPilihan = '-';
         if (strtoupper($code) === 'MTS') {
-            $tingkat = $edu['kelas_tingkat'] ?? ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas 7');
-            $detailPilihan = str($tingkat)->contains('Kelas') ? (string) $tingkat : "Kelas {$tingkat}";
+            $rawTingkat = $edu['tingkat_nama'] ?? ($edu['kelas_tingkat'] ?? ($edu['tingkat'] ?? ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas 7')));
+            $detailPilihan = str($rawTingkat)->contains('Kelas') ? (string) $rawTingkat : "Kelas {$rawTingkat}";
         } elseif (strtoupper($code) === 'MA') {
-            $tingkat = $edu['kelas_tingkat'] ?? ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas 10');
-            $jurusan = $edu['jurusan_ma'] ?? ($edu['jurusan'] ?? 'IPA');
-            $detailPilihan = (str($tingkat)->contains('Kelas') ? (string) $tingkat : "Kelas {$tingkat}")." | {$jurusan}";
+            $rawTingkat = $edu['tingkat_nama'] ?? ($edu['kelas_tingkat'] ?? ($edu['tingkat'] ?? ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas 10')));
+            $jurusan = $edu['jurusan_nama'] ?? ($edu['jurusan_ma'] ?? ($edu['jurusan'] ?? ''));
+            $tk = str($rawTingkat)->contains('Kelas') ? (string) $rawTingkat : "Kelas {$rawTingkat}";
+            $detailPilihan = $jurusan ? "{$tk} | {$jurusan}" : $tk;
         } else {
             // S1, S2, S3
-            $prodi = $edu['fakultas_prodi_utama'] ?? ($edu['prodi_utama'] ?? ($edu['prodi'] ?? ''));
-            $detailPilihan = $prodi ?: ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Reguler');
+            if (! empty($edu['fakultas_utama_nama'])) {
+                $detailPilihan = $edu['fakultas_utama_nama'].(! empty($edu['prodi_utama_nama']) ? ' - '.$edu['prodi_utama_nama'] : '');
+            } else {
+                $prodi = $edu['fakultas_prodi_utama'] ?? ($edu['prodi_utama'] ?? ($edu['prodi'] ?? ''));
+                $detailPilihan = $prodi ?: ($tipePendaftaran === 'Pindahan' ? 'Pindahan' : 'Reguler');
+            }
         }
 
         $tglLahir = $personal['tanggal_lahir'] ?? null;
@@ -229,21 +234,21 @@ class SubmitPendaftarExport extends DefaultValueBinder implements FromCollection
             (string) ($p->jenjang?->name ?? ($p->jenjang?->code ?? '-')),
             (string) $detailPilihan,
             (string) $tipePendaftaran,
-            (string) ($edu['pendidikan_sebelumnya']['nisn'] ?? ($edu['nisn'] ?? '-')),
-            (string) ($edu['pendidikan_sebelumnya']['nama_sekolah'] ?? ($edu['asal_sekolah'] ?? '-')),
+            (string) ($edu['nisn'] ?? ($edu['pendidikan_sebelumnya']['nisn'] ?? '-')),
+            (string) ($edu['nama_sekolah_asal'] ?? ($edu['pendidikan_sebelumnya']['nama_sekolah'] ?? ($edu['asal_sekolah'] ?? '-'))),
             (string) ($address['provinsi'] ?? '-'),
             (string) ($address['kabupaten_kota'] ?? '-'),
             (string) ($address['kecamatan'] ?? '-'),
             (string) ($address['kelurahan_desa'] ?? '-'),
-            (string) ($address['alamat_lengkap'] ?? '-'),
-            (string) ($parent['ayah']['nama'] ?? '-'),
-            (string) ($parent['ayah']['nik'] ?? '-'),
-            (string) ($parent['ayah']['nomor_hp'] ?? '-'),
-            (string) ($parent['ayah']['pekerjaan'] ?? '-'),
-            (string) ($parent['ibu']['nama'] ?? '-'),
-            (string) ($parent['ibu']['nik'] ?? '-'),
-            (string) ($parent['ibu']['nomor_hp'] ?? '-'),
-            (string) ($parent['ibu']['pekerjaan'] ?? '-'),
+            (string) ($address['alamat'] ?? ($address['alamat_lengkap'] ?? '-')),
+            (string) ($parent['nama_ayah'] ?? ($parent['ayah']['nama'] ?? '-')),
+            (string) ($parent['nik_ayah'] ?? ($parent['ayah']['nik'] ?? '-')),
+            (string) ($parent['nomor_hp_ayah'] ?? ($parent['ayah']['nomor_hp'] ?? '-')),
+            (string) ($parent['pekerjaan_ayah'] ?? ($parent['ayah']['pekerjaan'] ?? '-')),
+            (string) ($parent['nama_ibu'] ?? ($parent['ibu']['nama'] ?? '-')),
+            (string) ($parent['nik_ibu'] ?? ($parent['ibu']['nik'] ?? '-')),
+            (string) ($parent['nomor_hp_ibu'] ?? ($parent['ibu']['nomor_hp'] ?? '-')),
+            (string) ($parent['pekerjaan_ibu'] ?? ($parent['ibu']['pekerjaan'] ?? '-')),
             (string) $statusStr,
             (string) ($personal['catatan_revisi'] ?? '-'),
         ];

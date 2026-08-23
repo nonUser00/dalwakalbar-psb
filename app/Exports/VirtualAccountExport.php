@@ -54,11 +54,12 @@ class VirtualAccountExport extends DefaultValueBinder implements FromCollection,
 
     public function collection()
     {
-        $query = Pendaftar::whereHas('virtualAccounts', function ($q) {
-            $q->whereHas('bank', function ($b) {
-                $b->where('is_active', true);
-            });
-        })
+        $query = Pendaftar::accessibleBy()
+            ->whereHas('virtualAccounts', function ($q) {
+                $q->whereHas('bank', function ($b) {
+                    $b->where('is_active', true);
+                });
+            })
             ->with([
                 'virtualAccounts' => function ($q) {
                     $q->whereHas('bank', function ($b) {

@@ -72,7 +72,7 @@ class PengumumanPendaftarExport extends DefaultValueBinder implements FromCollec
 
     public function collection()
     {
-        $query = Pendaftar::query()
+        $query = Pendaftar::accessibleBy()
             ->with([
                 'cabang',
                 'jenjang',

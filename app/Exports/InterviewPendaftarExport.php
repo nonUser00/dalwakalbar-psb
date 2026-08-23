@@ -212,14 +212,19 @@ class InterviewPendaftarExport extends DefaultValueBinder implements FromCollect
         // Generate detail pilihan according to jenjang (MTs, MA, S1, S2, S3)
         $detailPilihan = '-';
         if (strtoupper($code) === 'MTS') {
-            $tingkat = $edu['kelas_tingkat'] ?? ($p->tipe_pendaftaran?->value === 'Pindahan' ? 'Pindahan' : 'Kelas 7');
-            $detailPilihan = str($tingkat)->contains('Kelas') ? (string) $tingkat : "Kelas {$tingkat}";
+            $rawTingkat = $edu['tingkat_nama'] ?? ($edu['kelas_tingkat'] ?? ($edu['tingkat'] ?? ($p->tipe_pendaftaran?->value === 'Pindahan' ? 'Pindahan' : 'Kelas 7')));
+            $detailPilihan = str($rawTingkat)->contains('Kelas') ? (string) $rawTingkat : "Kelas {$rawTingkat}";
         } elseif (strtoupper($code) === 'MA') {
-            $jurusan = $edu['jurusan_ma'] ?? ($edu['jurusan'] ?? null);
-            $tingkat = $edu['kelas_tingkat'] ?? ($p->tipe_pendaftaran?->value === 'Pindahan' ? 'Pindahan' : 'Kelas 10');
-            $detailPilihan = $jurusan ? "Jurusan {$jurusan}" : (str($tingkat)->contains('Kelas') ? (string) $tingkat : "Kelas {$tingkat}");
+            $rawTingkat = $edu['tingkat_nama'] ?? ($edu['kelas_tingkat'] ?? ($edu['tingkat'] ?? ($p->tipe_pendaftaran?->value === 'Pindahan' ? 'Pindahan' : 'Kelas 10')));
+            $jurusan = $edu['jurusan_nama'] ?? ($edu['jurusan_ma'] ?? ($edu['jurusan'] ?? ''));
+            $tk = str($rawTingkat)->contains('Kelas') ? (string) $rawTingkat : "Kelas {$rawTingkat}";
+            $detailPilihan = $jurusan ? "{$tk} | {$jurusan}" : $tk;
         } elseif (in_array(strtoupper($code), ['S1', 'S2', 'S3'])) {
-            $detailPilihan = $edu['fakultas_prodi_utama'] ?? ($edu['prodi_utama'] ?? ($edu['prodi'] ?? 'Reguler'));
+            if (! empty($edu['fakultas_utama_nama'])) {
+                $detailPilihan = $edu['fakultas_utama_nama'].(! empty($edu['prodi_utama_nama']) ? ' - '.$edu['prodi_utama_nama'] : '');
+            } else {
+                $detailPilihan = $edu['fakultas_prodi_utama'] ?? ($edu['prodi_utama'] ?? ($edu['prodi'] ?? 'Reguler'));
+            }
         }
 
         $gender = $p->personal_data['jenis_kelamin'] ?? '-';

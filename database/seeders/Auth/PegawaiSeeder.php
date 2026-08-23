@@ -4,6 +4,8 @@ namespace Database\Seeders\Auth;
 
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
+use App\Models\Master\Cabang;
+use App\Models\Master\Jenjang;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,22 +22,37 @@ class PegawaiSeeder extends Seeder
         $koordinatorRole = Role::firstOrCreate(['name' => 'Koordinator PSB', 'guard_name' => 'web']);
         $pengujiRole = Role::firstOrCreate(['name' => 'Penguji', 'guard_name' => 'web']);
 
+        $allCabangIds = Cabang::pluck('id')->toArray();
+        $allJenjangIds = Jenjang::pluck('id')->toArray();
+
         // Super Admin: Raihan Alqadrie
         $superAdminUser = User::firstOrCreate([
             'email' => 'raihanalqadrie2002@gmail.com',
         ], [
-            'name' => 'Raihan Alqadrie',
-            'password' => Hash::make('password'),
+            'name' => 'Muhammad Raihan Alqadrie, S.Kom',
+            'password' => Hash::make('Raihan193750'),
             'gender' => 'Laki-Laki',
             'tempat_lahir' => 'Pontianak',
             'tanggal_lahir' => '2002-01-15',
-            'alamat_lengkap' => 'Jl. Ahmad Yani No. 12, Pontianak Selatan',
-            'nip' => '199001152020011001',
-            'nik' => '6171011501020001',
-            'no_kk' => '6171011501020010',
-            'no_akta_lahir' => '6171-LT-15012002-0001',
-            'nomor_hp' => '081254321098',
+            'alamat_lengkap' => 'Jl. Parit H. Muksin 2 Komp. Zamrud Permai A13',
+            'nip' => '',
+            'nik' => '',
+            'no_kk' => '',
+            'no_akta_lahir' => '',
+            'nomor_hp' => '0895639431959',
+            'allowed_cabang_ids' => $allCabangIds,
+            'allowed_jenjang_ids' => $allJenjangIds,
+            'allowed_gender' => 'ALL',
         ]);
+
+        // Update permissions for existing users
+        if ($superAdminUser) {
+            $superAdminUser->update([
+                'allowed_cabang_ids' => $allCabangIds,
+                'allowed_jenjang_ids' => $allJenjangIds,
+                'allowed_gender' => 'ALL',
+            ]);
+        }
 
         if (! $superAdminUser->hasRole('Super Admin')) {
             $superAdminUser->assignRole($superAdminRole);
@@ -48,15 +65,26 @@ class PegawaiSeeder extends Seeder
             'name' => 'Dr. Abdullah Ustman, M. Hi.',
             'password' => Hash::make('11091976'),
             'gender' => 'Laki-Laki',
-            'tempat_lahir' => 'Mempawah',
+            'tempat_lahir' => 'Pontianak',
             'tanggal_lahir' => '1976-09-11',
-            'alamat_lengkap' => 'Jl. Raya Mempawah No. 45, Mempawah',
-            'nip' => '197609112010011002',
-            'nik' => '6171011109760002',
-            'no_kk' => '6171011109760020',
-            'no_akta_lahir' => '6171-LT-11091976-0002',
-            'nomor_hp' => '081398765432',
+            'alamat_lengkap' => '',
+            'nip' => '',
+            'nik' => '',
+            'no_kk' => '',
+            'no_akta_lahir' => '',
+            'nomor_hp' => '087818224709',
+            'allowed_cabang_ids' => $allCabangIds,
+            'allowed_jenjang_ids' => $allJenjangIds,
+            'allowed_gender' => 'ALL',
         ]);
+
+        if ($adminUser) {
+            $adminUser->update([
+                'allowed_cabang_ids' => $allCabangIds,
+                'allowed_jenjang_ids' => $allJenjangIds,
+                'allowed_gender' => 'ALL',
+            ]);
+        }
 
         if (! $adminUser->hasRole('Admin')) {
             $adminUser->assignRole($adminRole);

@@ -17,90 +17,71 @@ class PeriodeGelombangSeeder extends Seeder
     {
         $jenjangs = Jenjang::all();
         $ta2026 = TahunAkademik::where('name', '2026/2027')->first();
-        $ta2025 = TahunAkademik::where('name', '2025/2026')->first();
 
+        // Hapus periode lama yang mengandung nama tahun ajaran atau di luar 2026/2027 jika tidak ada relasi penting pendaftar lama
         if ($ta2026) {
-            $periode1 = Periode::firstOrCreate(
+            // Update / Create Periode Gelombang 1
+            $periode1 = Periode::updateOrCreate(
                 [
                     'tahun_akademik_id' => $ta2026->id,
-                    'name' => 'Gelombang 1 TA 2026/2027',
+                    'name' => 'Gelombang 1',
                 ],
                 [
                     'status' => 'buka',
-                    'kuota' => 500,
-                    'jalur_pendaftaran' => 'Semua',
-                    'start_date' => '2026-01-01',
-                    'end_date' => '2026-12-31',
-                ]
-            );
-
-            $syncData1 = [];
-            foreach ($jenjangs as $j) {
-                $kuota = match ($j->code) {
-                    'MTS' => 150,
-                    'MA' => null, // Tanpa Batas
-                    'S1' => 100,
-                    'S2' => 50,
-                    'S3' => 25,
-                    default => 100,
-                };
-                $syncData1[$j->id] = ['kuota' => $kuota];
-            }
-            $periode1->jenjangs()->sync($syncData1);
-
-            Gelombang::firstOrCreate(
-                ['periode_id' => $periode1->id, 'name' => 'Gelombang 1 Utama'],
-                ['start_date' => '2026-01-01', 'end_date' => '2026-12-31']
-            );
-
-            $periode2 = Periode::firstOrCreate(
-                [
-                    'tahun_akademik_id' => $ta2026->id,
-                    'name' => 'Gelombang 2 TA 2026/2027',
-                ],
-                [
-                    'status' => 'draft',
-                    'kuota' => 300,
+                    'kuota' => null, // Unlimited
                     'jalur_pendaftaran' => 'Semua',
                     'start_date' => '2026-05-01',
                     'end_date' => '2026-07-31',
                 ]
             );
+
+            $syncData1 = [];
+            foreach ($jenjangs as $j) {
+                $syncData1[$j->id] = ['kuota' => null]; // Unlimited kuota per jenjang
+            }
+            $periode1->jenjangs()->sync($syncData1);
+
+            Gelombang::updateOrCreate(
+                [
+                    'periode_id' => $periode1->id,
+                    'name' => 'Gelombang 1',
+                ],
+                [
+                    'start_date' => '2026-05-01',
+                    'end_date' => '2026-07-31',
+                ]
+            );
+
+            // Update / Create Periode Gelombang 2
+            $periode2 = Periode::updateOrCreate(
+                [
+                    'tahun_akademik_id' => $ta2026->id,
+                    'name' => 'Gelombang 2',
+                ],
+                [
+                    'status' => 'buka',
+                    'kuota' => null, // Unlimited
+                    'jalur_pendaftaran' => 'Semua',
+                    'start_date' => '2026-08-01',
+                    'end_date' => '2026-09-30',
+                ]
+            );
+
             $syncData2 = [];
             foreach ($jenjangs as $j) {
-                $syncData2[$j->id] = ['kuota' => 50];
+                $syncData2[$j->id] = ['kuota' => null]; // Unlimited kuota per jenjang
             }
             $periode2->jenjangs()->sync($syncData2);
 
-            Gelombang::firstOrCreate(
-                ['periode_id' => $periode2->id, 'name' => 'Gelombang 2 Reguler'],
-                ['start_date' => '2026-05-01', 'end_date' => '2026-07-31']
-            );
-        }
-
-        if ($ta2025) {
-            $periode2025 = Periode::firstOrCreate(
+            Gelombang::updateOrCreate(
                 [
-                    'tahun_akademik_id' => $ta2025->id,
-                    'name' => 'Gelombang 1 TA 2025/2026',
+                    'periode_id' => $periode2->id,
+                    'name' => 'Gelombang 2',
                 ],
                 [
-                    'status' => 'tutup',
-                    'kuota' => 450,
-                    'jalur_pendaftaran' => 'Semua',
-                    'start_date' => '2025-01-01',
-                    'end_date' => '2025-06-30',
+                    'start_date' => '2026-08-01',
+                    'end_date' => '2026-09-30',
                 ]
-            );
-            $syncData2025 = [];
-            foreach ($jenjangs as $j) {
-                $syncData2025[$j->id] = ['kuota' => null];
-            }
-            $periode2025->jenjangs()->sync($syncData2025);
-
-            Gelombang::firstOrCreate(
-                ['periode_id' => $periode2025->id, 'name' => 'Gelombang 1 Utama TA 2025/2026'],
-                ['start_date' => '2025-01-01', 'end_date' => '2025-06-30']
             );
         }
     }

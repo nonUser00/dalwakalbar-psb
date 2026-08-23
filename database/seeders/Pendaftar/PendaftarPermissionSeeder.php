@@ -28,5 +28,10 @@ class PendaftarPermissionSeeder extends Seeder
         if ($superAdmin) {
             $superAdmin->givePermissionTo($permissions);
         }
+
+        $admin = Role::where('name', 'Admin')->first();
+        if ($admin) {
+            $admin->givePermissionTo($permissions);
+        }
     }
 }

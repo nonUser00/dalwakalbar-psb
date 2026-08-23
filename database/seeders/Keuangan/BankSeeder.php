@@ -18,8 +18,7 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/bri.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account', 'nominal' => 4000],
-                    ['name' => 'Biaya Admin BI-FAST', 'nominal' => 2500],
+                    ['name' => 'System Handling', 'nominal' => 15000],
                 ],
             ],
             [
@@ -29,8 +28,7 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/mandiri.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account', 'nominal' => 4000],
-                    ['name' => 'Biaya Admin Transaksi', 'nominal' => 3000],
+                    ['name' => 'System Handling', 'nominal' => 15000],
                 ],
             ],
             [
@@ -40,8 +38,7 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/bni.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account', 'nominal' => 4000],
-                    ['name' => 'Biaya Admin BI-FAST', 'nominal' => 2500],
+                    ['name' => 'System Handling', 'nominal' => 15000],
                 ],
             ],
             [
@@ -51,8 +48,7 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/bca.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account', 'nominal' => 4500],
-                    ['name' => 'Biaya Layanan Tambahan', 'nominal' => 2500],
+                    ['name' => 'System Handling', 'nominal' => 15000],
                 ],
             ],
             [
@@ -62,7 +58,7 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/bsi.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account Syariah', 'nominal' => 3500],
+                    ['name' => 'System Handling', 'nominal' => 15000],
                 ],
             ],
             [
@@ -72,8 +68,8 @@ class BankSeeder extends Seeder
                 'logo_path' => 'image/bank/kalbar.png',
                 'is_active' => true,
                 'fees' => [
-                    ['name' => 'Biaya Transfer Virtual Account Kalbar', 'nominal' => 3000],
-                    ['name' => 'Biaya Admin Layanan Daerah', 'nominal' => 2000],
+                    ['name' => 'System Handling', 'nominal' => 12500],
+                    ['name' => 'Admin Bank', 'nominal' => 2500],
                 ],
             ],
         ];
@@ -89,11 +85,15 @@ class BankSeeder extends Seeder
                 ]
             );
 
+            // Bersihkan data fee lama untuk bank ini agar sinkron
+            BiayaAdminBank::where('bank_id', $bank->id)->delete();
+
             foreach ($bData['fees'] as $fData) {
-                BiayaAdminBank::updateOrCreate(
-                    ['bank_id' => $bank->id, 'name' => $fData['name']],
-                    ['nominal' => $fData['nominal']]
-                );
+                BiayaAdminBank::create([
+                    'bank_id' => $bank->id,
+                    'name' => $fData['name'],
+                    'nominal' => $fData['nominal'],
+                ]);
             }
         }
     }

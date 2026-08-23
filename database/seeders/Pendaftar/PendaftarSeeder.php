@@ -46,8 +46,8 @@ class PendaftarSeeder extends Seeder
     {
         $cabangBarat = Cabang::where('name', 'like', '%Barat%')->first();
         $cabangTimur = Cabang::where('name', 'like', '%Timur%')->first();
-        $periode = Periode::latest('created_at')->first();
-        $gelombang = Gelombang::first();
+        $periode = Periode::where('name', 'Gelombang 1')->first() ?? Periode::first();
+        $gelombang = Gelombang::where('name', 'Gelombang 1')->first() ?? Gelombang::first();
 
         // Master Jenjang
         $jenjangMts = Jenjang::where('code', 'MTS')->orWhere('name', 'like', '%Tsanawiyah%')->first();

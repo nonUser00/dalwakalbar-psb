@@ -19,13 +19,13 @@ class SettingSeeder extends Seeder
             [
                 'group' => 'umum',
                 'key' => 'kontak_darurat_wa',
-                'value' => '081234567890',
+                'value' => '087818224709',
                 'type' => 'string',
             ],
             [
                 'group' => 'umum',
                 'key' => 'nama_contact',
-                'value' => 'Pondok Pesantren Darullughah Wadda\'wah Kalbar',
+                'value' => 'Perwakilan Kalimantan Barat - Pondok Pesantren Darullughah Wadda\'wah',
                 'type' => 'string',
             ],
             [

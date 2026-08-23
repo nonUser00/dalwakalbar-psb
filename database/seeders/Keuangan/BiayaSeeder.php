@@ -16,73 +16,128 @@ class BiayaSeeder extends Seeder
         $jenjangs = Jenjang::all();
 
         foreach ($jenjangs as $jenjang) {
-            $kategoriPendaftaran = KategoriBiaya::firstOrCreate([
+            $code = strtoupper($jenjang->code ?? $jenjang->singkatan ?? '');
+
+            // Bersihkan kategori pendaftaran lama jika ada
+            $oldKategoris = KategoriBiaya::where('jenis', 'pendaftaran')
+                ->where('jenjang_id', $jenjang->id)
+                ->where('name', '!=', 'Administrasi Pendaftaran')
+                ->get();
+            foreach ($oldKategoris as $oldKategori) {
+                ItemBiaya::where('kategori_biaya_id', $oldKategori->id)->delete();
+                $oldKategori->delete();
+            }
+
+            $kategoriPendaftaran = KategoriBiaya::updateOrCreate([
                 'jenis' => 'pendaftaran',
                 'jenjang_id' => $jenjang->id,
-                'name' => 'Biaya Pendaftaran & Formulir',
+            ], [
+                'name' => 'Administrasi Pendaftaran',
             ]);
 
-            ItemBiaya::firstOrCreate([
+            ItemBiaya::where('kategori_biaya_id', $kategoriPendaftaran->id)->delete();
+
+            // 1. Biaya Wilayah
+            ItemBiaya::create([
                 'kategori_biaya_id' => $kategoriPendaftaran->id,
-                'name' => 'Biaya Formulir & Administrasi Pendaftaran',
-            ], ['nominal' => 250000]);
-
-            $kategoriDaftarUlang = KategoriBiaya::firstOrCreate([
-                'jenis' => 'pendaftaran',
-                'jenjang_id' => $jenjang->id,
-                'name' => 'Biaya Daftar Ulang & Masuk Pondok',
+                'name' => 'Biaya wilayah (termasuk kartu peserta tes & wawancara)',
+                'nominal' => 365000,
             ]);
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriDaftarUlang->id,
-                'name' => 'Biaya Perlengkapan, Kitab & Seragam',
-            ], ['nominal' => 1200000]);
+            // 2. Biaya Administrasi & Cetak Formulir
+            ItemBiaya::create([
+                'kategori_biaya_id' => $kategoriPendaftaran->id,
+                'name' => 'Biaya administrasi & cetak formulir',
+                'nominal' => 800000,
+            ]);
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriDaftarUlang->id,
-                'name' => 'Biaya Pembinaan & Pengembangan Santri',
-            ], ['nominal' => 800000]);
+            // 3. Uang Pangkal Program Pondok Saja
+            ItemBiaya::create([
+                'kategori_biaya_id' => $kategoriPendaftaran->id,
+                'name' => 'Uang pangkal — program pondok saja',
+                'nominal' => 13000000,
+            ]);
+
+            // 4. Uang Pangkal Formal sesuai Jenjang
+            $formalUangPangkalName = match ($code) {
+                'MTS' => 'Uang pangkal — pondok + formal MTs',
+                'MA' => 'Uang pangkal — pondok + formal MA',
+                'S1' => 'Uang pangkal — pondok + formal S1',
+                'S2' => 'Uang pangkal — pondok + formal S2',
+                'S3' => 'Uang pangkal — pondok + formal S3',
+                default => 'Uang pangkal — pondok + formal '.$code,
+            };
+
+            $formalUangPangkalNominal = in_array($code, ['S1', 'S2', 'S3']) ? 15500000 : 13500000;
+
+            ItemBiaya::create([
+                'kategori_biaya_id' => $kategoriPendaftaran->id,
+                'name' => $formalUangPangkalName,
+                'nominal' => $formalUangPangkalNominal,
+            ]);
         }
 
         // 2. BIAYA ROMBONGAN (PER-CABANG & PER-JENIS ROMBONGAN: PESAWAT / KAPAL)
         $cabangs = Cabang::all();
 
         foreach ($cabangs as $cabang) {
-            // Rombongan Pesawat
-            $kategoriPesawat = KategoriBiaya::firstOrCreate([
+            // Rombongan Jalur Udara (Pesawat Terbang) - Total Rp 2.900.000
+            $kategoriPesawat = KategoriBiaya::updateOrCreate([
                 'jenis' => 'rombongan',
                 'cabang_id' => $cabang->id,
                 'jenis_rombongan' => 'PESAWAT',
+            ], [
                 'name' => 'Biaya Keberangkatan Rombongan Pesawat ('.$cabang->name.')',
             ]);
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriPesawat->id,
-                'name' => 'Tiket Pesawat & Bagasi',
-            ], ['nominal' => 1750000]);
+            // Bersihkan item biaya lama
+            ItemBiaya::where('kategori_biaya_id', $kategoriPesawat->id)->delete();
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriPesawat->id,
-                'name' => 'Transportasi Bandara & Pendamping',
-            ], ['nominal' => 250000]);
+            $pesawatItems = [
+                ['name' => 'Tiket Pesawat Rute Pontianak – Surabaya & Bagasi', 'nominal' => 2050000],
+                ['name' => 'Transportasi Bandara Kedatangan – Penginapan', 'nominal' => 150000],
+                ['name' => 'Akomodasi Penginapan (2 Malam)', 'nominal' => 300000],
+                ['name' => 'Konsumsi di Penginapan (5 Kali Makan)', 'nominal' => 150000],
+                ['name' => 'Transportasi Tes Kesehatan & Administrasi PP', 'nominal' => 100000],
+                ['name' => 'Transportasi Penginapan Menuju Pondok Pesantren', 'nominal' => 150000],
+            ];
 
-            // Rombongan Kapal
-            $kategoriKapal = KategoriBiaya::firstOrCreate([
+            foreach ($pesawatItems as $item) {
+                ItemBiaya::create([
+                    'kategori_biaya_id' => $kategoriPesawat->id,
+                    'name' => $item['name'],
+                    'nominal' => $item['nominal'],
+                ]);
+            }
+
+            // Rombongan Jalur Laut (Kapal Penumpang) - Total Rp 1.650.000
+            $kategoriKapal = KategoriBiaya::updateOrCreate([
                 'jenis' => 'rombongan',
                 'cabang_id' => $cabang->id,
                 'jenis_rombongan' => 'KAPAL',
+            ], [
                 'name' => 'Biaya Keberangkatan Rombongan Kapal Laut ('.$cabang->name.')',
             ]);
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriKapal->id,
-                'name' => 'Tiket Kapal Laut & Tempat Tidur',
-            ], ['nominal' => 650000]);
+            // Bersihkan item biaya lama
+            ItemBiaya::where('kategori_biaya_id', $kategoriKapal->id)->delete();
 
-            ItemBiaya::firstOrCreate([
-                'kategori_biaya_id' => $kategoriKapal->id,
-                'name' => 'Konsumsi Perjalanan & Transportasi Pelabuhan',
-            ], ['nominal' => 150000]);
+            $kapalItems = [
+                ['name' => 'Tiket Kapal Laut Rute Pontianak – Surabaya', 'nominal' => 800000],
+                ['name' => 'Transportasi Pelabuhan Kedatangan – Penginapan', 'nominal' => 150000],
+                ['name' => 'Akomodasi Penginapan (2 Malam)', 'nominal' => 300000],
+                ['name' => 'Konsumsi di Penginapan (5 Kali Makan)', 'nominal' => 150000],
+                ['name' => 'Transportasi Tes Kesehatan & Administrasi PP', 'nominal' => 100000],
+                ['name' => 'Transportasi Penginapan Menuju Pondok Pesantren', 'nominal' => 150000],
+            ];
+
+            foreach ($kapalItems as $item) {
+                ItemBiaya::create([
+                    'kategori_biaya_id' => $kategoriKapal->id,
+                    'name' => $item['name'],
+                    'nominal' => $item['nominal'],
+                ]);
+            }
         }
 
         // 3. BIAYA INTERVIEW (GLOBAL)

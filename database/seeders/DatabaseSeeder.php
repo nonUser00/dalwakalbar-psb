@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\Asrama\AsramaPermissionSeeder;
+use Database\Seeders\Asrama\RombonganSeeder;
 use Database\Seeders\Auth\AuthPermissionSeeder;
 use Database\Seeders\Auth\PegawaiSeeder;
 use Database\Seeders\Keuangan\BankSeeder;
@@ -76,6 +77,7 @@ class DatabaseSeeder extends Seeder
 
             // 8. Asrama
             AsramaPermissionSeeder::class,
+            RombonganSeeder::class,
         ]);
     }
 }

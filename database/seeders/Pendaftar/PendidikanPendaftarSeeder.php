@@ -16,32 +16,32 @@ class PendidikanPendaftarSeeder extends Seeder
         $data = [
             [
                 'tipe' => 'Umum',
-                'name' => 'SD',
+                'name' => 'Sekolah Dasar (SD)',
                 'tingkats' => ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
             ],
             [
                 'tipe' => 'Umum',
-                'name' => 'SMP',
+                'name' => 'Sekolah Menengah Pertama (SMP)',
                 'tingkats' => ['Kelas 7', 'Kelas 8', 'Kelas 9'],
             ],
             [
                 'tipe' => 'Umum',
-                'name' => 'SMA / SMK',
+                'name' => 'Sekolah Menengah Atas (SMA/SMK)',
                 'tingkats' => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
             ],
             [
-                'tipe' => 'Pondok Pesantren',
-                'name' => 'Madrasah Ibtidaiyah',
+                'tipe' => 'Madrasah',
+                'name' => 'Madrasah Ibtidaiyah (MI)',
                 'tingkats' => ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
             ],
             [
-                'tipe' => 'Pondok Pesantren',
-                'name' => 'Madrasah Tsanawiyah',
+                'tipe' => 'Madrasah',
+                'name' => 'Madrasah Tsanawiyah (MTs)',
                 'tingkats' => ['Kelas 7', 'Kelas 8', 'Kelas 9'],
             ],
             [
-                'tipe' => 'Pondok Pesantren',
-                'name' => 'Madrasah Aliyah',
+                'tipe' => 'Madrasah',
+                'name' => 'Madrasah Aliyah (MA)',
                 'tingkats' => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
             ],
             [

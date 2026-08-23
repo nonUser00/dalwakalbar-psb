@@ -27,7 +27,7 @@ class DokumenSeeder extends Seeder
             ],
             [
                 'name' => 'Kartu Keluarga (KK)',
-                'type' => 'pdf',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
@@ -35,31 +35,31 @@ class DokumenSeeder extends Seeder
             ],
             [
                 'name' => 'Akta Kelahiran',
-                'type' => 'pdf',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
                 'jenjang_codes' => ['all'],
             ],
             [
-                'name' => 'Ijazah SD/MI / Surat Keterangan Lulus (SKL)',
-                'type' => 'pdf',
+                'name' => 'Ijazah SD/MI/Surat Keterangan Lulus (SKL)',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
                 'jenjang_codes' => ['MTS'],
             ],
             [
-                'name' => 'Ijazah MTs/SMP / Surat Keterangan Lulus (SKL)',
-                'type' => 'pdf',
+                'name' => 'Ijazah SMP/MTs/Surat Keterangan Lulus (SKL)',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
                 'jenjang_codes' => ['MA'],
             ],
             [
-                'name' => 'Ijazah MA/SMA / SKL & Transkrip Nilai',
-                'type' => 'pdf',
+                'name' => 'Ijazah SMA/SMK/MA/Surat Keterangan Lulus (SKL)',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
@@ -67,7 +67,7 @@ class DokumenSeeder extends Seeder
             ],
             [
                 'name' => 'Ijazah S1 & Transkrip Nilai Akademik',
-                'type' => 'pdf',
+                'type' => 'pdf', // Dokumen (PDF)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
@@ -75,27 +75,27 @@ class DokumenSeeder extends Seeder
             ],
             [
                 'name' => 'Ijazah S2 & Transkrip Nilai Akademik',
-                'type' => 'pdf',
+                'type' => 'pdf', // Dokumen (PDF)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => true,
                 'is_profile_photo' => false,
                 'jenjang_codes' => ['S3'],
             ],
             [
-                'name' => 'Surat Keterangan Pindah / Mutasi',
-                'type' => 'pdf',
+                'name' => 'Surat Keterangan Pindah/Mutasi',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Pindahan',
                 'is_required' => true,
                 'is_profile_photo' => false,
-                'jenjang_codes' => ['MTS', 'MA'],
+                'jenjang_codes' => ['all'],
             ],
             [
-                'name' => 'Surat Rekomendasi Tokoh / Pimpinan Pesantren',
-                'type' => 'pdf',
+                'name' => 'Surat Rekomendasi Tokoh/Pimpinan Pesantren',
+                'type' => 'semua', // Dokumen & Gambar (PDF, JPG, PNG)
                 'jalur_pendaftaran' => 'Semua',
                 'is_required' => false,
                 'is_profile_photo' => false,
-                'jenjang_codes' => ['S1', 'S2', 'S3'],
+                'jenjang_codes' => ['S2', 'S3'],
             ],
         ];
 
@@ -113,12 +113,11 @@ class DokumenSeeder extends Seeder
             } else {
                 $syncIds = [];
                 foreach ($jenjangCodes as $code) {
-                    // Match by code or loose match
-                    $matched = $allJenjangs->filter(function ($j, $key) use ($code) {
-                        return str_contains(strtoupper($key), strtoupper($code))
-                            || str_contains(strtoupper($j->name), strtoupper($code))
-                            || strtoupper($j->code ?? '') === strtoupper($code);
+                    $matched = $allJenjangs->filter(function ($j) use ($code) {
+                        return strtoupper($j->code ?? '') === strtoupper($code)
+                            || strtoupper($j->singkatan ?? '') === strtoupper($code);
                     });
+
                     foreach ($matched as $m) {
                         $syncIds[] = $m->id;
                     }

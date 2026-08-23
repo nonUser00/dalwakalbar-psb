@@ -330,7 +330,7 @@ const getDetailUrl = (id: string) => {
                     <div v-if="selectedIds.length > 0" class="flex gap-2">
                         <button
                             @click="exportSelected"
-                            class="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                            class="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
                             <svg
                                 class="mr-1.5 h-4 w-4 text-gray-500 dark:text-slate-400"
@@ -373,7 +373,7 @@ const getDetailUrl = (id: string) => {
                     <!-- Trigger Button -->
                     <button
                         @click="isFilterModalOpen = true"
-                        class="group inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                        class="group inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
                         <svg
                             class="h-4 w-4 text-gray-400 transition-colors group-hover:text-primary dark:text-slate-400 dark:text-slate-500 dark:group-hover:text-blue-400"
@@ -479,18 +479,73 @@ const getDetailUrl = (id: string) => {
                             <p
                                 class="text-[15px] leading-tight font-bold text-slate-800 dark:text-slate-100"
                             >
-                                {{ row.causer.name }}
+                                {{ row.causer.name || row.causer.nama }}
                             </p>
                             <span
                                 class="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400"
-                                >{{ row.causer.email || 'Admin' }}</span
+                            >
+                                {{
+                                    row.causer.email ||
+                                    row.causer.nomor_pendaftaran ||
+                                    (row.causer_type && row.causer_type.includes('Pendaftar')
+                                        ? 'Pendaftar'
+                                        : 'Admin')
+                                }}
+                            </span>
+                        </div>
+                        <div
+                            v-else-if="
+                                row.causer_type &&
+                                row.causer_type.includes('Pendaftar')
+                            "
+                            class="flex flex-col"
+                        >
+                            <p
+                                class="text-[14px] leading-tight font-bold text-slate-700 dark:text-slate-200"
+                            >
+                                {{
+                                    row.properties?.nama ||
+                                    row.properties?.pendaftar_nama ||
+                                    'Pendaftar'
+                                }}
+                            </p>
+                            <span
+                                class="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500"
+                            >
+                                {{
+                                    row.properties?.nomor_pendaftaran ||
+                                    '(Data Akun Terhapus)'
+                                }}
+                            </span>
+                        </div>
+                        <div
+                            v-else-if="
+                                row.causer_type &&
+                                row.causer_type.includes('User')
+                            "
+                            class="flex flex-col"
+                        >
+                            <p
+                                class="text-[14px] leading-tight font-bold text-slate-700 dark:text-slate-200"
+                            >
+                                {{ row.properties?.name || 'Pengguna / Admin' }}
+                            </p>
+                            <span
+                                class="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500"
+                            >
+                                (Akun Telah Dihapus)
+                            </span>
+                        </div>
+                        <div v-else class="flex flex-col">
+                            <span
+                                class="text-[13px] font-semibold text-slate-600 dark:text-slate-300"
+                                >Sistem Otomatis</span
+                            >
+                            <span
+                                class="text-[11px] text-slate-400 dark:text-slate-500"
+                                >Proses Latar / Cron</span
                             >
                         </div>
-                        <span
-                            v-else
-                            class="text-[13px] font-medium text-slate-500 italic dark:text-slate-400"
-                            >Sistem / Anonim</span
-                        >
                     </div>
                 </template>
                 <template #cell-role="{ row }">
@@ -519,11 +574,36 @@ const getDetailUrl = (id: string) => {
                                 </span>
                             </span>
                         </template>
+                        <template
+                            v-else-if="
+                                row.causer_type &&
+                                row.causer_type.includes('Pendaftar')
+                            "
+                        >
+                            <span
+                                class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            >
+                                Pendaftar
+                            </span>
+                        </template>
+                        <template
+                            v-else-if="
+                                row.causer_type &&
+                                row.causer_type.includes('User')
+                            "
+                        >
+                            <span
+                                class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                Pegawai
+                            </span>
+                        </template>
                         <span
                             v-else
-                            class="text-[13px] font-medium text-slate-400 dark:text-slate-500"
-                            >-</span
+                            class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                         >
+                            Sistem
+                        </span>
                     </div>
                 </template>
                 <template #cell-log_name="{ row }">

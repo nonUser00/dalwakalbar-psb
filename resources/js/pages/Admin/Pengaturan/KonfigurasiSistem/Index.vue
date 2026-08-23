@@ -510,7 +510,7 @@ const tabs = [
                                         <div class="flex-shrink-0">
                                             <div
                                                 v-if="kopSuratPreview"
-                                                class="group hover:border-primary-300 relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition-all dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900"
+                                                class="group hover:border-primary-300 relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition-all dark:border-slate-700 dark:bg-slate-800"
                                             >
                                                 <img
                                                     :src="kopSuratPreview"
@@ -520,7 +520,7 @@ const tabs = [
                                             </div>
                                             <div
                                                 v-else
-                                                class="flex h-36 w-36 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                                                class="flex h-36 w-36 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                                             >
                                                 <svg
                                                     class="mx-auto mb-2 h-10 w-10 text-gray-300 dark:text-slate-600"

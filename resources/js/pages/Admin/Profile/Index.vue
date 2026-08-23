@@ -386,7 +386,7 @@ const formatDate = (dateString: string) => {
             >
                 <!-- Avatar with Camera Trigger -->
                 <div
-                    class="group relative mb-6 h-32 w-32 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                    class="group relative mb-6 h-32 w-32 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl dark:border-slate-800 dark:bg-slate-800"
                 >
                     <img
                         v-if="props.user.foto_url || props.user.foto"
@@ -459,7 +459,7 @@ const formatDate = (dateString: string) => {
                         <button
                             @click="openAvatarModal"
                             type="button"
-                            class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-700 dark:hover:text-blue-400"
+                            class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-700 dark:hover:text-blue-400"
                             title="Edit Foto Profil"
                         >
                             <svg
@@ -487,7 +487,7 @@ const formatDate = (dateString: string) => {
                         <button
                             @click="openEditBiodataModal"
                             type="button"
-                            class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-700 dark:hover:bg-slate-800/50 dark:hover:text-blue-400"
+                            class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:bg-slate-700 dark:hover:text-blue-400"
                             title="Edit Biodata Diri"
                         >
                             <svg

@@ -259,7 +259,7 @@ const submit = () => {
         <form id="sequenceForm" @submit.prevent="submit" class="space-y-8">
             <!-- Prefix Settings -->
             <div
-                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:ring-0"
+                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900 dark:ring-0"
             >
                 <div class="mb-4">
                     <h4
@@ -285,7 +285,7 @@ const submit = () => {
 
             <!-- Pattern Builder -->
             <div
-                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:ring-0"
+                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900 dark:ring-0"
             >
                 <div class="mb-4">
                     <h4
@@ -360,7 +360,7 @@ const submit = () => {
                         >
                             <template #item="{ element }">
                                 <div
-                                    class="cursor-move rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all select-none hover:scale-105 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    class="cursor-move rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all select-none hover:scale-105 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                 >
                                     {{ element.label }}
                                 </div>
@@ -465,7 +465,7 @@ const submit = () => {
 
             <!-- Configuration -->
             <div
-                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:ring-0"
+                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-slate-800 dark:bg-slate-900 dark:ring-0"
             >
                 <div class="mb-4">
                     <h4
@@ -499,7 +499,7 @@ const submit = () => {
             <button
                 type="button"
                 @click="close"
-                class="w-full rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-gray-200 sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                class="w-full rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-gray-200 sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-slate-100"
                 :disabled="form.processing"
             >
                 Batal

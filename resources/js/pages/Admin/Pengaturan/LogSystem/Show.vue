@@ -145,7 +145,7 @@ const getEventBadgeClass = (event: string) => {
                                             v-else-if="log.causer"
                                             class="text-sm font-extrabold text-gray-500 uppercase dark:text-slate-400"
                                             >{{
-                                                log.causer.name.charAt(0)
+                                                (log.causer.name || log.causer.nama || 'U').charAt(0)
                                             }}</span
                                         >
                                         <svg
@@ -169,18 +169,39 @@ const getEventBadgeClass = (event: string) => {
                                         >
                                             {{
                                                 log.causer?.name ||
-                                                'Sistem/Anonim'
+                                                log.causer?.nama ||
+                                                log.properties?.nama ||
+                                                log.properties?.name ||
+                                                (log.causer_type ? 'Pengguna (Data Terhapus)' : 'Sistem Otomatis')
                                             }}
                                         </p>
                                         <p
-                                            v-if="log.causer?.roles"
+                                            v-if="log.causer?.roles && log.causer.roles.length"
                                             class="mt-0.5 text-sm font-medium text-gray-500 dark:text-slate-400"
                                         >
                                             {{
                                                 log.causer.roles
                                                     .map((r: any) => r.name)
-                                                    .join(', ') || '-'
+                                                    .join(', ')
                                             }}
+                                        </p>
+                                        <p
+                                            v-else-if="log.causer_type && log.causer_type.includes('Pendaftar')"
+                                            class="mt-0.5 text-sm font-medium text-emerald-600 dark:text-emerald-400"
+                                        >
+                                            Pendaftar ({{ log.causer?.nomor_pendaftaran || log.properties?.nomor_pendaftaran || 'Akun Terhapus' }})
+                                        </p>
+                                        <p
+                                            v-else-if="log.causer_type && log.causer_type.includes('User')"
+                                            class="mt-0.5 text-sm font-medium text-slate-500 dark:text-slate-400"
+                                        >
+                                            Pegawai (Akun Terhapus)
+                                        </p>
+                                        <p
+                                            v-else
+                                            class="mt-0.5 text-sm font-medium text-gray-400 dark:text-slate-500"
+                                        >
+                                            Background Job / Sistem
                                         </p>
                                     </div>
                                 </div>
@@ -468,7 +489,7 @@ const getEventBadgeClass = (event: string) => {
                             class="rounded-2xl border border-dashed border-gray-100 bg-gray-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800"
                         >
                             <div
-                                class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-500"
+                                class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-slate-800 dark:text-slate-500"
                             >
                                 <svg
                                     class="h-8 w-8"

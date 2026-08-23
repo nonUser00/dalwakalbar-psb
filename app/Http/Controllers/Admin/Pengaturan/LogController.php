@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin\Pengaturan;
 use App\Exports\LogExport;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Activity;
+use App\Models\Auth\User;
+use App\Models\Pendaftar\Pendaftar;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -14,18 +17,33 @@ class LogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Activity::with('causer.roles')->latest();
+        $query = Activity::with([
+            'causer' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    User::class => ['roles'],
+                ]);
+            },
+        ])->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
                     ->orWhere('event', 'like', "%{$search}%")
-                    ->orWhereHas('causer', function ($q2) use ($search) {
-                        $q2->where('name', 'like', "%{$search}%")
-                            ->orWhereHas('roles', function ($q3) use ($search) {
-                                $q3->where('name', 'like', "%{$search}%");
-                            });
+                    ->orWhere('log_name', 'like', "%{$search}%")
+                    ->orWhereHasMorph('causer', [User::class, Pendaftar::class], function ($causerQuery, $type) use ($search) {
+                        if ($type === User::class) {
+                            $causerQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhereHas('roles', function ($q3) use ($search) {
+                                    $q3->where('name', 'like', "%{$search}%");
+                                });
+                        } elseif ($type === Pendaftar::class) {
+                            $causerQuery->where('nama', 'like', "%{$search}%")
+                                ->orWhere('nik', 'like', "%{$search}%")
+                                ->orWhere('nomor_pendaftaran', 'like', "%{$search}%")
+                                ->orWhere('nomor_hp', 'like', "%{$search}%");
+                        }
                     });
             });
         }
@@ -39,9 +57,16 @@ class LogController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->whereHas('causer.roles', function ($q) use ($request) {
-                $q->where('name', $request->role);
-            });
+            $role = $request->role;
+            if (strcasecmp($role, 'pendaftar') === 0 || strcasecmp($role, 'calon santri') === 0) {
+                $query->where('causer_type', Pendaftar::class);
+            } else {
+                $query->whereHasMorph('causer', [User::class], function ($q) use ($role) {
+                    $q->whereHas('roles', function ($rq) use ($role) {
+                        $rq->where('name', $role);
+                    });
+                });
+            }
         }
 
         if ($request->filled('date_start') && $request->filled('date_end')) {
@@ -54,7 +79,10 @@ class LogController extends Controller
         // Get unique log names and events for dropdowns
         $modules = Activity::select('log_name')->distinct()->whereNotNull('log_name')->pluck('log_name');
         $events = Activity::select('event')->distinct()->whereNotNull('event')->pluck('event');
-        $roles = Role::pluck('name');
+        $roles = Role::pluck('name')->toArray();
+        if (! in_array('Pendaftar', $roles)) {
+            $roles[] = 'Pendaftar';
+        }
 
         return Inertia::render('Admin/Pengaturan/LogSystem/Index', [
             'logs' => $logs,
@@ -67,7 +95,13 @@ class LogController extends Controller
 
     public function show(string $id)
     {
-        $log = Activity::with('causer.roles')->findOrFail($id);
+        $log = Activity::with([
+            'causer' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    User::class => ['roles'],
+                ]);
+            },
+        ])->findOrFail($id);
 
         return Inertia::render('Admin/Pengaturan/LogSystem/Show', [
             'log' => $log,
@@ -138,7 +172,13 @@ class LogController extends Controller
 
     public function export(Request $request)
     {
-        $query = Activity::with('causer.roles')->latest();
+        $query = Activity::with([
+            'causer' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    User::class => ['roles'],
+                ]);
+            },
+        ])->latest();
 
         // Apply same filters as index if requested
         if ($request->filled('ids')) {
@@ -153,11 +193,20 @@ class LogController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
                         ->orWhere('event', 'like', "%{$search}%")
-                        ->orWhereHas('causer', function ($q2) use ($search) {
-                            $q2->where('name', 'like', "%{$search}%")
-                                ->orWhereHas('roles', function ($q3) use ($search) {
-                                    $q3->where('name', 'like', "%{$search}%");
-                                });
+                        ->orWhere('log_name', 'like', "%{$search}%")
+                        ->orWhereHasMorph('causer', [User::class, Pendaftar::class], function ($causerQuery, $type) use ($search) {
+                            if ($type === User::class) {
+                                $causerQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%")
+                                    ->orWhereHas('roles', function ($q3) use ($search) {
+                                        $q3->where('name', 'like', "%{$search}%");
+                                    });
+                            } elseif ($type === Pendaftar::class) {
+                                $causerQuery->where('nama', 'like', "%{$search}%")
+                                    ->orWhere('nik', 'like', "%{$search}%")
+                                    ->orWhere('nomor_pendaftaran', 'like', "%{$search}%")
+                                    ->orWhere('nomor_hp', 'like', "%{$search}%");
+                            }
                         });
                 });
             }
@@ -168,9 +217,16 @@ class LogController extends Controller
                 $query->where('event', $request->action);
             }
             if ($request->filled('role')) {
-                $query->whereHas('causer.roles', function ($q) use ($request) {
-                    $q->where('name', $request->role);
-                });
+                $role = $request->role;
+                if (strcasecmp($role, 'pendaftar') === 0 || strcasecmp($role, 'calon santri') === 0) {
+                    $query->where('causer_type', Pendaftar::class);
+                } else {
+                    $query->whereHasMorph('causer', [User::class], function ($q) use ($role) {
+                        $q->whereHas('roles', function ($rq) use ($role) {
+                            $rq->where('name', $role);
+                        });
+                    });
+                }
             }
             if ($request->filled('date_start') && $request->filled('date_end')) {
                 $query->whereBetween('created_at', [$request->date_start.' 00:00:00', $request->date_end.' 23:59:59']);

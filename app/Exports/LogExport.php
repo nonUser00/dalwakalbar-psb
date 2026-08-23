@@ -2,6 +2,8 @@
 
 namespace App\Exports;
 
+use App\Models\Auth\User;
+use App\Models\Pendaftar\Pendaftar;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -37,15 +39,29 @@ class LogExport implements FromQuery, WithHeadings, WithMapping
 
     public function map($log): array
     {
-        $roles = $log->causer && $log->causer->roles ? $log->causer->roles->pluck('name')->join(', ') : '-';
+        $causerName = 'Sistem / Anonim';
+        $roleName = '-';
+
+        if ($log->causer) {
+            if ($log->causer instanceof User) {
+                $causerName = $log->causer->name;
+                $roleName = $log->causer->roles ? $log->causer->roles->pluck('name')->join(', ') : '-';
+            } elseif ($log->causer instanceof Pendaftar) {
+                $causerName = "{$log->causer->nama} ({$log->causer->nomor_pendaftaran})";
+                $roleName = 'Pendaftar';
+            } else {
+                $causerName = $log->causer->name ?? $log->causer->nama ?? 'Pengguna';
+                $roleName = method_exists($log->causer, 'roles') && $log->causer->roles ? $log->causer->roles->pluck('name')->join(', ') : '-';
+            }
+        }
 
         return [
             $log->id,
             $log->created_at->format('Y-m-d H:i:s'),
             $log->log_name,
             $log->event,
-            $log->causer ? $log->causer->name : 'Sistem / Anonim',
-            $roles,
+            $causerName,
+            $roleName,
             $log->description,
             json_encode($log->properties),
         ];

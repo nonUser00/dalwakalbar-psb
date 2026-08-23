@@ -173,7 +173,7 @@ class BiodataController extends Controller
     {
         $request->validate([
             'dokumen_id' => 'required|exists:dokumens,id',
-            'file' => 'required|file|max:5120', // 5MB max
+            'file' => 'required|file|mimes:jpeg,png,jpg,pdf,webp|max:5120', // 5MB max
         ]);
 
         /** @var Pendaftar $pendaftar */
@@ -184,6 +184,22 @@ class BiodataController extends Controller
         }
 
         $dokumenId = $request->dokumen_id;
+        $dokumenMaster = Dokumen::find($dokumenId);
+
+        if ($dokumenMaster) {
+            $file = $request->file('file');
+            $mime = $file->getMimeType();
+            $isImage = str_starts_with($mime, 'image/');
+            $isPdf = $mime === 'application/pdf';
+
+            if ($dokumenMaster->type === 'gambar' && ! $isImage) {
+                return redirect()->back()->withErrors(['file' => 'Dokumen ini hanya menerima file format gambar (JPG, PNG, WebP).']);
+            }
+            if ($dokumenMaster->type === 'pdf' && ! $isPdf) {
+                return redirect()->back()->withErrors(['file' => 'Dokumen ini hanya menerima file format PDF.']);
+            }
+        }
+
         $path = $request->file('file')->store('pendaftar_dokumens', 'public');
 
         // Cari dokumen yang sudah ada
@@ -209,6 +225,34 @@ class BiodataController extends Controller
         );
 
         return redirect()->back()->with('success', 'Dokumen berhasil diunggah.');
+    }
+
+    public function batalSubmit(Request $request)
+    {
+        /** @var Pendaftar $pendaftar */
+        $pendaftar = Auth::guard('pendaftar')->user();
+
+        // Hanya izinkan batal submit jika statusnya masih SUBMITTED (belum diverifikasi/tagihan/interview/lulus dll)
+        if ($pendaftar->status !== PendaftarStatus::Submitted) {
+            return redirect()->back()->with('error', 'Formulir pendaftaran tidak dapat diedit kembali karena sudah diproses ke tahap selanjutnya.');
+        }
+
+        $pendaftar->update([
+            'status' => PendaftarStatus::Draft,
+            'locked_at' => null,
+        ]);
+
+        activity()
+            ->useLog('Pendaftar')
+            ->causedBy($pendaftar)
+            ->event('unsubmitted')
+            ->withProperties([
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ])
+            ->log("Pendaftar {$pendaftar->nama} ({$pendaftar->nomor_pendaftaran}) membuka kembali kunci formulir pendaftaran untuk diedit.");
+
+        return redirect()->route('psb.biodata.index', ['step' => 1])->with('success', 'Formulir pendaftaran berhasil dibuka. Silakan periksa atau ubah data Anda.');
     }
 
     public function submitFinal(Request $request)

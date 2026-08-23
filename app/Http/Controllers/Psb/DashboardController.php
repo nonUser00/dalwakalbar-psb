@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Psb;
 
 use App\Enums\JalurPendaftaran;
 use App\Enums\PendaftarStatus;
+use App\Enums\StatusPeriode;
 use App\Enums\TipePendaftaran;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Dokumen;
+use App\Models\Master\TahunAkademik;
 use App\Models\Pendaftar\Pendaftar;
+use App\Models\Pendaftaran\Gelombang;
+use App\Models\Pendaftaran\Periode;
 use App\Models\Setting\Setting;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -19,17 +23,56 @@ class DashboardController extends Controller
     {
         /** @var Pendaftar $pendaftar */
         $pendaftar = Auth::guard('pendaftar')->user();
+
+        if (! $pendaftar->periode_id || ! $pendaftar->gelombang_id) {
+            $activeTahunAkademik = TahunAkademik::where('is_active', true)->first();
+            if ($activeTahunAkademik) {
+                $activePeriode = Periode::where('tahun_akademik_id', $activeTahunAkademik->id)
+                    ->where(function ($q) {
+                        $q->where('status', StatusPeriode::Buka)
+                            ->orWhere('status', 'buka');
+                    })
+                    ->latest('created_at')
+                    ->first()
+                    ?? Periode::where('tahun_akademik_id', $activeTahunAkademik->id)->latest('created_at')->first();
+
+                if ($activePeriode) {
+                    $pendaftar->periode_id = $pendaftar->periode_id ?? $activePeriode->id;
+
+                    if (! $pendaftar->gelombang_id) {
+                        $now = now()->startOfDay();
+                        $gelombangs = Gelombang::where('periode_id', $activePeriode->id)->get();
+                        $activeGelombang = $gelombangs->first(function ($g) use ($now) {
+                            $startDate = $g->start_date ?? $g->periode?->start_date;
+                            $endDate = $g->end_date ?? $g->periode?->end_date;
+                            if ($startDate && $endDate) {
+                                return $now->between($startDate->copy()->startOfDay(), $endDate->copy()->endOfDay());
+                            }
+
+                            return true;
+                        }) ?? $gelombangs->first();
+
+                        if ($activeGelombang) {
+                            $pendaftar->gelombang_id = $activeGelombang->id;
+                        }
+                    }
+                    $pendaftar->saveQuietly();
+                }
+            }
+        }
+
         $pendaftar->load(['jenjang', 'periode', 'gelombang', 'cabang', 'tagihans.pembayarans', 'dokumens.dokumen', 'hasilUjian', 'keberangkatan']);
 
-        // Check biodata completion: complete when all 4 steps have data
+        // Check biodata completion: 5 steps of registration form
         $hasPersonalData = ! empty($pendaftar->personal_data) && ! empty($pendaftar->personal_data['tempat_lahir'] ?? null);
         $hasParentData = ! empty($pendaftar->parent_data) && (! empty($pendaftar->parent_data['nama_ayah'] ?? null) || ! empty($pendaftar->parent_data['nama_ibu'] ?? null));
-        $hasAddressData = ! empty($pendaftar->address_data) && ! empty($pendaftar->address_data['alamat'] ?? null);
+        $hasAddressData = ! empty($pendaftar->address_data) && (! empty($pendaftar->address_data['alamat'] ?? null) || ! empty($pendaftar->address_data['desa_kelurahan'] ?? null));
         $hasEducationData = ! empty($pendaftar->education_data) && (
             ! empty($pendaftar->education_data['nama_sekolah_asal'] ?? null) ||
             ! empty($pendaftar->education_data['asal_sekolah'] ?? null) ||
             ! empty($pendaftar->education_data['kelas_tingkat'] ?? null) ||
-            ! empty($pendaftar->education_data['prodi'] ?? null)
+            ! empty($pendaftar->education_data['prodi'] ?? null) ||
+            ! empty($pendaftar->jenjang_id)
         );
         $isBiodataComplete = $hasPersonalData && $hasParentData && $hasAddressData && $hasEducationData;
 
@@ -61,6 +104,8 @@ class DashboardController extends Controller
             ->filter(fn ($d) => ! empty($d->file_path))
             ->count();
 
+        $isDocsComplete = ($totalRequiredDocs === 0) || ($uploadedDocsCount >= $totalRequiredDocs);
+
         // Check payments
         $totalTagihan = (float) $pendaftar->tagihans->sum('total_amount');
         $totalPaid = (float) $pendaftar->tagihans->flatMap->pembayarans->where('status', 'DITERIMA')->sum('amount');
@@ -75,24 +120,28 @@ class DashboardController extends Controller
         $jamSelesai = Setting::where('key', 'jam_kerja_selesai')->value('value') ?? '17:00';
         $jamKerjaText = (is_array($hariKerja) && count($hariKerja) > 0 ? implode(', ', $hariKerja).' (' : '').$jamMulai.' - '.$jamSelesai.' WIB'.(is_array($hariKerja) && count($hariKerja) > 0 ? ')' : '');
 
-        // Calculate progress percentage (0 - 100)
-        $progress = 20; // 20% for registration done (Tahap 1)
-        if ($isBiodataComplete) {
-            $progress += 25; // 25% for Tahap 2
-        } elseif ($pendaftar->current_step > 1 || $hasPersonalData) {
-            $progress += 10; // In-progress biodata
-        }
-
-        if ($totalRequiredDocs > 0 && $uploadedDocsCount >= $totalRequiredDocs) {
-            $progress += 25;
-        } elseif ($uploadedDocsCount > 0) {
-            $progress += 15;
-        }
-        if (! $hasUnpaidTagihan && $totalTagihan > 0) {
-            $progress += 15;
-        }
-        if (in_array($pendaftar->status, [PendaftarStatus::Lulus, PendaftarStatus::TidakLulus], true)) {
-            $progress += 15;
+        // Calculate progress percentage of registration form completeness (5 steps @ 20%)
+        if ($pendaftar->status && $pendaftar->status !== PendaftarStatus::Draft) {
+            $progress = 100;
+        } else {
+            $progress = 0;
+            if ($hasPersonalData) {
+                $progress += 20;
+            }
+            if ($hasParentData) {
+                $progress += 20;
+            }
+            if ($hasAddressData) {
+                $progress += 20;
+            }
+            if ($hasEducationData) {
+                $progress += 20;
+            }
+            if ($isDocsComplete) {
+                $progress += 20;
+            } elseif ($totalRequiredDocs > 0 && $uploadedDocsCount > 0) {
+                $progress += (int) round(($uploadedDocsCount / $totalRequiredDocs) * 20);
+            }
         }
         $progress = min($progress, 100);
 

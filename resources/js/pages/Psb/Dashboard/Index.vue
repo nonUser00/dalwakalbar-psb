@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PsbLayout from '@/Layouts/PsbLayout.vue';
+import { formatHariKerja } from '@/lib/utils';
 import { getPendaftarStatusBadge } from '@/types/enums';
 
 defineOptions({ layout: PsbLayout });
+
+const page = usePage();
 
 interface PendaftarData {
     id: string;
@@ -23,6 +27,10 @@ interface PendaftarData {
     cabang?: string;
     submitted_at?: string;
     created_at?: string;
+    personal_data?: any;
+    parent_data?: any;
+    address_data?: any;
+    education_data?: any;
 }
 
 interface SummaryData {
@@ -38,9 +46,6 @@ interface SummaryData {
     progress_percentage: number;
 }
 
-import { computed } from 'vue';
-import { formatHariKerja } from '@/lib/utils';
-
 interface KontakData {
     wa: string;
     nama: string;
@@ -55,6 +60,8 @@ const props = defineProps<{
     summary: SummaryData;
     kontak: KontakData;
 }>();
+
+const badges = computed(() => (page.props as any).sidebar_badges || {});
 
 const hariKerjaText = computed(() => {
     return formatHariKerja(props.kontak.hari_kerja);
@@ -335,8 +342,14 @@ const openCetakKartu = () => {
                     <!-- Nav 1: Formulir & Dokumen -->
                     <Link
                         href="/psb/biodata"
-                        class="group flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                        class="group relative flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                     >
+                        <span
+                            v-if="badges.psb_formulir"
+                            class="absolute top-4 right-4 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#ff2d55] px-1.5 text-[10px] font-black leading-none text-white shadow-xs"
+                        >
+                            {{ badges.psb_formulir }}
+                        </span>
                         <div class="space-y-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 transition-colors group-hover:bg-primary group-hover:text-white">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -363,8 +376,14 @@ const openCetakKartu = () => {
                     <!-- Nav 3: Keuangan -->
                     <Link
                         href="/psb/keuangan"
-                        class="group flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                        class="group relative flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                     >
+                        <span
+                            v-if="badges.psb_tagihan"
+                            class="absolute top-4 right-4 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#ff2d55] px-1.5 text-[10px] font-black leading-none text-white shadow-xs"
+                        >
+                            {{ badges.psb_tagihan }}
+                        </span>
                         <div class="space-y-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 transition-colors group-hover:bg-primary group-hover:text-white">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -391,8 +410,14 @@ const openCetakKartu = () => {
                     <!-- Nav 4: Ujian -->
                     <Link
                         href="/psb/ujian"
-                        class="group flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                        class="group relative flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                     >
+                        <span
+                            v-if="badges.psb_jadwal"
+                            class="absolute top-4 right-4 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#ff2d55] px-1.5 text-[10px] font-black leading-none text-white shadow-xs"
+                        >
+                            {{ badges.psb_jadwal }}
+                        </span>
                         <div class="space-y-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 transition-colors group-hover:bg-primary group-hover:text-white">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -16,7 +16,7 @@ defineOptions({ layout: PsbLayout });
 interface DokumenMaster {
     id: string;
     name: string;
-    type: 'gambar' | 'pdf';
+    type: 'gambar' | 'pdf' | 'semua';
     is_required: boolean;
     is_profile_photo: boolean;
     jalur_pendaftaran?: string;
@@ -86,6 +86,30 @@ const isLocked = computed(() => {
 
     return status && status !== 'DRAFT';
 });
+
+// Modal Batal Submit / Edit Pendaftaran
+const showUnsubmitModal = ref(false);
+const isUnsubmitting = ref(false);
+
+const canEditRegistration = computed(() => {
+    const status = (props.pendaftar.status || '').toUpperCase();
+    return status === 'SUBMITTED';
+});
+
+const submitBatalSubmit = () => {
+    isUnsubmitting.value = true;
+    router.post(
+        '/psb/biodata/batal-submit',
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                isUnsubmitting.value = false;
+                showUnsubmitModal.value = false;
+            },
+        },
+    );
+};
 
 // Step 1: Data Personal
 const personalData = ref({
@@ -536,9 +560,13 @@ const getJenjangLogo = (jenjangOrCode?: any) => {
 };
 
 const onSelectJenjang = (jenjangId: string) => {
+    if (isLocked.value) {
+        return;
+    }
+
     if (educationData.value.jenjang_id === jenjangId) {
-return;
-}
+        return;
+    }
 
     educationData.value.jenjang_id = jenjangId;
 
@@ -719,6 +747,7 @@ return [];
 });
 
 const onTipeSekolahAsalChange = (newTipe: string) => {
+    if (isLocked.value) return;
     educationData.value.tipe_sekolah_asal = newTipe;
     educationData.value.pendidikan_pendaftar_id = '';
     educationData.value.jenjang_sekolah_asal = '';
@@ -733,6 +762,7 @@ const onTipeSekolahAsalChange = (newTipe: string) => {
 };
 
 const onPendidikanSebelumnyaChange = (pendidikanId: string) => {
+    if (isLocked.value) return;
     educationData.value.pendidikan_pendaftar_id = pendidikanId;
     const p = props.masterData.pendidikan_pendaftars.find((item) => item.id === pendidikanId);
 
@@ -755,6 +785,7 @@ const onPendidikanSebelumnyaChange = (pendidikanId: string) => {
 };
 
 const onTingkatSebelumnyaChange = (tingkatId: string) => {
+    if (isLocked.value) return;
     educationData.value.tingkat_sebelumnya_id = tingkatId;
     const t = selectedPendidikanSebelumnya.value?.tingkats?.find((item: any) => item.id === tingkatId);
 
@@ -764,6 +795,7 @@ const onTingkatSebelumnyaChange = (tingkatId: string) => {
 };
 
 const onTingkatTujuanChange = (tingkatId: string) => {
+    if (isLocked.value) return;
     educationData.value.tingkat_id = tingkatId;
     const t = selectedJenjang.value?.tingkats?.find((item: any) => item.id === tingkatId);
 
@@ -773,6 +805,7 @@ const onTingkatTujuanChange = (tingkatId: string) => {
 };
 
 const setTipePendaftaran = (tipe: string) => {
+    if (isLocked.value) return;
     educationData.value.tipe_pendaftaran = tipe;
 
     if (tipe === 'Reguler') {
@@ -790,6 +823,7 @@ const setTipePendaftaran = (tipe: string) => {
 };
 
 const onJurusanChange = (jurusanId: string) => {
+    if (isLocked.value) return;
     educationData.value.jurusan_id = jurusanId;
     const j = jurusanMaOptions.value.find((item: any) => item.value === jurusanId);
 
@@ -1016,6 +1050,11 @@ const submitFinalRegistration = () => {
 };
 
 const canAccessStep = (targetStep: number): boolean => {
+    // Jika formulir sudah dikirim / terkunci, izinkan navigasi ke seluruh tab (1-5) untuk melihat data
+    if (isLocked.value) {
+        return true;
+    }
+
     if (targetStep === 1) {
         return true;
     }
@@ -1260,6 +1299,12 @@ const saveStep = (targetStep: number) => {
 
 const nextStep = () => {
     if (currentStep.value < 5) {
+        if (isLocked.value) {
+            currentStep.value++;
+            errors.value = {};
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
         saveStep(currentStep.value + 1);
     }
 };
@@ -1273,11 +1318,15 @@ const prevStep = () => {
 };
 
 const handleStepClick = (targetStep: number) => {
-    if (isLocked.value) {
+    if (targetStep === currentStep.value) {
         return;
     }
 
-    if (targetStep === currentStep.value) {
+    // Jika dalam status locked (sudah submit), boleh berpindah bebas antar tab untuk melihat data
+    if (isLocked.value) {
+        currentStep.value = targetStep;
+        errors.value = {};
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
 
@@ -1305,43 +1354,56 @@ const handleStepClick = (targetStep: number) => {
     saveStep(targetStep);
 };
 
-const steps = computed(() => [
-    {
-        number: 1,
-        title: 'Data Personal',
-        desc: 'Identitas santri & kependudukan',
-        isComplete: isStep1Complete,
-        hasRevision: Boolean(props.pendaftar.personal_data?.catatan_personal),
-    },
-    {
-        number: 2,
-        title: 'Orang Tua / Wali',
-        desc: 'Biodata ayah, ibu & wali',
-        isComplete: isStep2Complete,
-        hasRevision: Boolean(props.pendaftar.parent_data?.catatan_parent),
-    },
-    {
-        number: 3,
-        title: 'Alamat & Domisili',
-        desc: 'Wilayah tempat tinggal',
-        isComplete: isStep3Complete,
-        hasRevision: Boolean(props.pendaftar.address_data?.catatan_address),
-    },
-    {
-        number: 4,
-        title: 'Pilihan Pendidikan',
-        desc: 'Jenjang & asal sekolah',
-        isComplete: isStep4Complete,
-        hasRevision: Boolean(props.pendaftar.education_data?.catatan_education),
-    },
-    {
-        number: 5,
-        title: 'Upload Dokumen',
-        desc: 'Berkas digital persyaratan',
-        isComplete: isStep5Complete,
-        hasRevision: Boolean(props.uploadedDokumens?.some((d) => d.catatan && (d.status === 'REJECTED' || d.status === 'DITOLAK'))),
-    },
-]);
+const steps = computed(() => {
+    // Hitung catatan revisi dokumen
+    const docRevisionCount = props.uploadedDokumens?.filter((d) => {
+        const statusVal = (d.status || '').toUpperCase();
+        return Boolean(d.catatan) || statusVal === 'REJECTED' || statusVal === 'DITOLAK';
+    }).length || 0;
+
+    return [
+        {
+            number: 1,
+            title: 'Data Personal',
+            desc: 'Identitas santri & kependudukan',
+            isComplete: isStep1Complete,
+            hasRevision: Boolean(props.pendaftar.personal_data?.catatan_personal || props.pendaftar.personal_data?.catatan_revisi),
+            revisionCount: Boolean(props.pendaftar.personal_data?.catatan_personal || props.pendaftar.personal_data?.catatan_revisi) ? 1 : 0,
+        },
+        {
+            number: 2,
+            title: 'Orang Tua / Wali',
+            desc: 'Biodata ayah, ibu & wali',
+            isComplete: isStep2Complete,
+            hasRevision: Boolean(props.pendaftar.parent_data?.catatan_parent),
+            revisionCount: Boolean(props.pendaftar.parent_data?.catatan_parent) ? 1 : 0,
+        },
+        {
+            number: 3,
+            title: 'Alamat & Domisili',
+            desc: 'Wilayah tempat tinggal',
+            isComplete: isStep3Complete,
+            hasRevision: Boolean(props.pendaftar.address_data?.catatan_address),
+            revisionCount: Boolean(props.pendaftar.address_data?.catatan_address) ? 1 : 0,
+        },
+        {
+            number: 4,
+            title: 'Pilihan Pendidikan',
+            desc: 'Jenjang & asal sekolah',
+            isComplete: isStep4Complete,
+            hasRevision: Boolean(props.pendaftar.education_data?.catatan_education),
+            revisionCount: Boolean(props.pendaftar.education_data?.catatan_education) ? 1 : 0,
+        },
+        {
+            number: 5,
+            title: 'Upload Dokumen',
+            desc: 'Berkas digital persyaratan',
+            isComplete: isStep5Complete,
+            hasRevision: docRevisionCount > 0,
+            revisionCount: docRevisionCount,
+        },
+    ];
+});
 
 const progressPercentage = computed(() => {
     let completedCount = 0;
@@ -1452,20 +1514,36 @@ const progressPercentage = computed(() => {
         <!-- Locked Banner Alert if already submitted -->
         <div
             v-if="isLocked"
-            class="flex items-start gap-4 rounded-3xl border border-blue-200 bg-blue-50 p-5 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/40"
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-blue-200 bg-blue-50 p-5 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/40"
         >
-            <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+            <div class="flex items-start gap-4">
+                <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-blue-900 dark:text-blue-200">
+                        Formulir Pendaftaran Telah Dikirim
+                    </h4>
+                    <p class="mt-1 text-xs sm:text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
+                        Data formulir pendaftaran Anda sudah berhasil disubmit. Anda dapat meninjau isi seluruh tahapan data di bawah ini.
+                    </p>
+                </div>
             </div>
-            <div>
-                <h4 class="text-sm font-bold text-blue-900 dark:text-blue-200">
-                    Formulir Pendaftaran Telah Dikirim & Terkunci
-                </h4>
-                <p class="mt-1 text-xs sm:text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-                    Data formulir pendaftaran Anda sudah berhasil disubmit dan dalam tahap verifikasi panitia. Jika terdapat data yang perlu dikoreksi, silakan hubungi kontak panitia PSB.
-                </p>
+
+            <!-- Tombol Edit Pendaftaran (Batal Submit) jika status masih SUBMITTED -->
+            <div v-if="canEditRegistration" class="shrink-0">
+                <button
+                    type="button"
+                    @click="showUnsubmitModal = true"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-blue-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-blue-700 shadow-sm transition-all hover:bg-blue-50 hover:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800"
+                >
+                    <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>Edit Data Pendaftaran</span>
+                </button>
             </div>
         </div>
 
@@ -1526,7 +1604,7 @@ const progressPercentage = computed(() => {
                             :key="st.number"
                             type="button"
                             @click="handleStepClick(st.number)"
-                            :disabled="isLocked || !canAccessStep(st.number)"
+                            :disabled="!canAccessStep(st.number)"
                             :class="[
                                 'group relative flex w-full items-start gap-3.5 rounded-3xl p-3.5 text-left transition-all duration-200',
                                 currentStep === st.number
@@ -1565,10 +1643,11 @@ const progressPercentage = computed(() => {
                                     </p>
                                     <span
                                         v-if="st.hasRevision"
-                                        class="rounded-full bg-rose-600 px-2 py-0.2 text-[9px] font-black text-white uppercase shadow-2xs"
+                                        class="inline-flex items-center gap-1 rounded-full bg-[#ff2d55] px-2 py-0.5 text-[9.5px] font-black text-white uppercase shadow-2xs"
                                         title="Tahap ini memerlukan perbaikan data"
                                     >
-                                        Revisi
+                                        <span>Revisi</span>
+                                        <span v-if="st.revisionCount > 1" class="font-bold">({{ st.revisionCount }})</span>
                                     </span>
                                     <span
                                         v-else-if="!canAccessStep(st.number)"
@@ -1794,9 +1873,9 @@ const progressPercentage = computed(() => {
 
                         <!-- Integrated Bottom Action Row -->
                         <div class="flex items-center justify-between border-t border-gray-100 pt-6 dark:border-slate-800">
-                            <span class="text-xs text-gray-400 font-medium">Langkah 1 dari 4: Identitas Diri</span>
-                            <PrimaryButton type="button" @click="nextStep" :disabled="isSubmitting">
-                                <span>Simpan & Lanjutkan</span>
+                            <span class="text-xs text-gray-400 font-medium">Langkah 1 dari 5: Identitas Diri</span>
+                            <PrimaryButton type="button" @click="nextStep" :disabled="!isLocked && isSubmitting">
+                                <span>{{ isLocked ? 'Langkah Berikutnya' : 'Simpan & Lanjutkan' }}</span>
                                 <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
@@ -2227,8 +2306,8 @@ const progressPercentage = computed(() => {
                                 Langkah Sebelumnya
                             </SecondaryButton>
 
-                            <PrimaryButton type="button" @click="nextStep" :disabled="isSubmitting">
-                                <span>Simpan & Lanjutkan</span>
+                            <PrimaryButton type="button" @click="nextStep" :disabled="!isLocked && isSubmitting">
+                                <span>{{ isLocked ? 'Langkah Berikutnya' : 'Simpan & Lanjutkan' }}</span>
                                 <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
@@ -2368,8 +2447,8 @@ const progressPercentage = computed(() => {
                                 Langkah Sebelumnya
                             </SecondaryButton>
 
-                            <PrimaryButton type="button" @click="nextStep" :disabled="isSubmitting">
-                                <span>Simpan & Lanjutkan</span>
+                            <PrimaryButton type="button" @click="nextStep" :disabled="!isLocked && isSubmitting">
+                                <span>{{ isLocked ? 'Langkah Berikutnya' : 'Simpan & Lanjutkan' }}</span>
                                 <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
@@ -2418,7 +2497,8 @@ const progressPercentage = computed(() => {
                                     <label
                                         @click.prevent="setTipePendaftaran('Reguler')"
                                         :class="[
-                                            'group relative flex cursor-pointer items-start justify-between gap-4 rounded-2xl border p-4 transition-all',
+                                            'group relative flex items-start justify-between gap-4 rounded-2xl border p-4 transition-all',
+                                            isLocked ? 'cursor-default opacity-90' : 'cursor-pointer',
                                             educationData.tipe_pendaftaran === 'Reguler'
                                                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20 dark:border-primary dark:bg-primary/15'
                                                 : 'border-gray-200 bg-gray-50/70 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:bg-slate-800/70'
@@ -2453,7 +2533,8 @@ const progressPercentage = computed(() => {
                                     <label
                                         @click.prevent="setTipePendaftaran('Pindahan')"
                                         :class="[
-                                            'group relative flex cursor-pointer items-start justify-between gap-4 rounded-2xl border p-4 transition-all',
+                                            'group relative flex items-start justify-between gap-4 rounded-2xl border p-4 transition-all',
+                                            isLocked ? 'cursor-default opacity-90' : 'cursor-pointer',
                                             educationData.tipe_pendaftaran === 'Pindahan'
                                                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20 dark:border-primary dark:bg-primary/15'
                                                 : 'border-gray-200 bg-gray-50/70 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:bg-slate-800/70'
@@ -2506,7 +2587,8 @@ const progressPercentage = computed(() => {
                                         :key="j.id"
                                         @click="onSelectJenjang(j.id)"
                                         :class="[
-                                            'group relative flex cursor-pointer flex-col justify-between rounded-3xl border p-4.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md min-h-[175px]',
+                                            'group relative flex flex-col justify-between rounded-3xl border p-4.5 transition-all duration-200 min-h-[175px]',
+                                            isLocked ? 'cursor-default opacity-90' : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md',
                                             educationData.jenjang_id === j.id
                                                 ? 'border-primary bg-gradient-to-b from-primary/5 to-white shadow-md ring-2 ring-primary/20 dark:border-blue-500/60 dark:from-blue-500/10 dark:to-slate-900/80 dark:ring-blue-500/20'
                                                 : 'border-gray-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700'
@@ -2820,19 +2902,18 @@ const progressPercentage = computed(() => {
                             </SecondaryButton>
 
                             <PrimaryButton
-                                v-if="!isLocked"
                                 type="button"
                                 @click="nextStep"
-                                :disabled="isSubmitting"
+                                :disabled="!isLocked && isSubmitting"
                             >
-                                <svg v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <svg v-if="!isLocked && isSubmitting" class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <svg v-else class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                                <span>{{ isSubmitting ? 'Menyimpan...' : 'Simpan & Lanjut ke Dokumen' }}</span>
+                                <span>{{ isLocked ? 'Langkah Berikutnya (Dokumen)' : isSubmitting ? 'Menyimpan...' : 'Simpan & Lanjut ke Dokumen' }}</span>
                             </PrimaryButton>
                         </div>
                     </div>
@@ -2984,7 +3065,7 @@ const progressPercentage = computed(() => {
                                     <!-- Card Details & Upload/Ganti Button -->
                                     <div class="mt-2.5 space-y-2">
                                         <div class="flex items-center justify-between text-[10.5px] text-slate-500 dark:text-slate-400">
-                                            <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : 'PDF' }}</span>
+                                            <span class="uppercase font-bold">{{ doc.type === 'gambar' ? 'Gambar' : doc.type === 'semua' ? 'PDF / Gambar' : 'PDF' }}</span>
                                             <button
                                                 v-if="!isLocked"
                                                 type="button"
@@ -3058,7 +3139,7 @@ const progressPercentage = computed(() => {
                             Unggah {{ activeUploadDoc.name }}
                         </h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Format: {{ activeUploadDoc.type === 'gambar' ? 'JPG, JPEG, PNG' : 'PDF' }} (Maks 5MB)
+                            Format: {{ activeUploadDoc.type === 'gambar' ? 'JPG, JPEG, PNG, WEBP' : activeUploadDoc.type === 'semua' ? 'PDF, JPG, JPEG, PNG, WEBP' : 'PDF' }} (Maks 5MB)
                         </p>
                     </div>
                 </div>
@@ -3067,7 +3148,7 @@ const progressPercentage = computed(() => {
                     <input
                         ref="fileInput"
                         type="file"
-                        :accept="activeUploadDoc.type === 'gambar' ? 'image/jpeg,image/png,image/jpg' : 'application/pdf'"
+                        :accept="activeUploadDoc.type === 'gambar' ? 'image/jpeg,image/png,image/jpg,image/webp' : activeUploadDoc.type === 'semua' ? 'image/jpeg,image/png,image/jpg,image/webp,application/pdf' : 'application/pdf'"
                         @change="handleFileSelect"
                         class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer dark:file:bg-blue-950/50 dark:file:text-blue-300"
                     />
@@ -3179,6 +3260,57 @@ const progressPercentage = computed(() => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         <span>{{ isSubmittingFinal ? 'Mengirim Data...' : 'Ya, Kirim & Finalisasi Sekarang' }}</span>
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- MODAL KONFIRMASI EDIT PENDAFTARAN (BATAL SUBMIT) -->
+        <Modal :show="showUnsubmitModal" @close="showUnsubmitModal = false" max-width="lg">
+            <div class="p-6 sm:p-8 space-y-6">
+                <div class="flex items-center gap-4">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-slate-100">
+                            Buka Kunci untuk Edit Formulir?
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-slate-400">
+                            Penerimaan Santri Baru Pondok Pesantren Dalwa Kalbar
+                        </p>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-xs sm:text-sm leading-relaxed text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300 space-y-2">
+                    <p class="font-bold">
+                        Penting:
+                    </p>
+                    <p>
+                        Dengan membuka formulir untuk diedit, status pendaftaran Anda akan dikembalikan menjadi <strong>DRAFT</strong>. Anda dapat memperbaiki atau mengubah data dan berkas dokumen.
+                    </p>
+                    <p class="text-xs text-amber-800 dark:text-amber-400">
+                        Setelah selesai melakukan perubahan, pastikan untuk <strong>mengirimkan (finalisasi) kembali</strong> formulir pendaftaran Anda agar diverifikasi oleh panitia.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-slate-800">
+                    <SecondaryButton type="button" @click="showUnsubmitModal = false">
+                        Batal
+                    </SecondaryButton>
+                    <PrimaryButton
+                        type="button"
+                        @click="submitBatalSubmit"
+                        :disabled="isUnsubmitting"
+                        class="bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700"
+                    >
+                        <svg v-if="isUnsubmitting" class="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{{ isUnsubmitting ? 'Membuka Formulir...' : 'Ya, Buka & Edit Formulir' }}</span>
                     </PrimaryButton>
                 </div>
             </div>

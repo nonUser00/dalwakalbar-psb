@@ -57,7 +57,7 @@ const formattedValue = computed(() => {
             :placeholder="placeholder"
             :disabled="disabled"
             v-bind="$attrs"
-            class="block w-full min-w-0 cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20 dark:disabled:bg-slate-900 min-h-[42px]"
+            class="block w-full min-w-0 cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 dark:disabled:bg-slate-900 min-h-[42px]"
             :class="{
                 'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-rose-500 dark:focus:border-rose-500':
                     error,

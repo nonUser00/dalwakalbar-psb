@@ -132,7 +132,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
             >
         </label>
         <div
-            class="relative flex w-full items-center overflow-hidden rounded-xl border bg-white transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-500/20"
+            class="relative flex w-full items-center overflow-hidden rounded-xl border bg-white transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-500/20"
             :class="[
                 error
                     ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-rose-500/20 dark:border-rose-500'

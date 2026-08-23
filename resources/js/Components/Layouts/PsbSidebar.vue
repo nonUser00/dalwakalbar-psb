@@ -193,6 +193,12 @@ const getSidebarBadge = (url: string): string | null => {
     if (url === '/psb/biodata') {
         return formatBadgeNumber(badges.psb_formulir || badges.psb_biodata);
     }
+    if (url === '/psb/keuangan/tagihan') {
+        return formatBadgeNumber(badges.psb_tagihan);
+    }
+    if (url === '/psb/ujian/jadwal') {
+        return formatBadgeNumber(badges.psb_jadwal);
+    }
     return null;
 };
 
@@ -202,8 +208,9 @@ const getGroupTotalBadge = (group: any): string | null => {
     const badges = (page.props as any).sidebar_badges || {};
 
     group.items.forEach((item: any) => {
-        if (item.url === '/psb/biodata') total += (badges.psb_biodata || 0);
-        if (item.url === '/psb/dokumen') total += (badges.psb_dokumen || 0);
+        if (item.url === '/psb/biodata') total += (badges.psb_formulir || badges.psb_biodata || 0);
+        if (item.url === '/psb/keuangan/tagihan') total += (badges.psb_tagihan || 0);
+        if (item.url === '/psb/ujian/jadwal') total += (badges.psb_jadwal || 0);
     });
 
     return formatBadgeNumber(total);

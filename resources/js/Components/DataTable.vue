@@ -127,7 +127,7 @@ const toggleExpand = (id: string) => {
                         v-model="search"
                         @input="handleSearch"
                         placeholder="Cari data..."
-                        class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2.5 pr-3 pl-10 text-sm font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20"
+                        class="block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 py-2.5 pr-3 pl-10 text-sm font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                     />
                 </div>
 
@@ -136,7 +136,7 @@ const toggleExpand = (id: string) => {
                     <button
                         type="button"
                         @click="isLimitDropdownOpen = !isLimitDropdownOpen"
-                        class="group flex w-full min-w-18 items-center justify-between rounded-xl border border-neutral-warm/20 bg-surface/50 px-3 py-2.5 text-sm font-bold text-primary-dark shadow-sm transition-all duration-300 hover:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-blue-500/20"
+                        class="group flex w-full min-w-18 items-center justify-between rounded-xl border border-neutral-warm/20 bg-surface/50 px-3 py-2.5 text-sm font-bold text-primary-dark shadow-sm transition-all duration-300 hover:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-blue-500/20"
                     >
                         <span>{{ limit }}</span>
                         <svg
@@ -173,7 +173,7 @@ const toggleExpand = (id: string) => {
                     >
                         <div
                             v-if="isLimitDropdownOpen"
-                            class="absolute top-full right-0 z-50 mt-2 w-32 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none sm:right-auto sm:left-0 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:ring-white/5"
+                            class="absolute top-full right-0 z-50 mt-2 w-32 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none sm:right-auto sm:left-0 dark:border-slate-800 dark:bg-slate-800 dark:ring-white/5"
                         >
                             <div class="px-2 py-2">
                                 <p
@@ -263,7 +263,7 @@ const toggleExpand = (id: string) => {
                 <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
                     <template v-for="(row, i) in data" :key="i">
                         <tr
-                            class="group bg-white transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/50 dark:hover:bg-slate-800/80"
+                            class="group bg-white transition-colors hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800/80"
                             :class="{
                                 'bg-primary/5 hover:bg-primary/10 dark:bg-primary/15 dark:hover:bg-primary/25 dark:hover:bg-slate-700/50':
                                     selectedIds.includes(row.id),
@@ -434,7 +434,7 @@ const toggleExpand = (id: string) => {
                     :class="[
                         link.active
                             ? 'border-primary bg-primary text-white dark:border-primary dark:bg-primary'
-                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-800',
+                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
                         !link.url && !link.onClick
                             ? 'cursor-not-allowed bg-gray-50 opacity-50 dark:bg-slate-800'
                             : 'cursor-pointer',

@@ -40,7 +40,7 @@ const show = ref(false);
                 "
                 :placeholder="placeholder"
                 v-bind="$attrs"
-                class="relative block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 px-3 py-2.5 pr-10 text-sm font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-800 dark:focus:ring-blue-500/20"
+                class="relative block w-full appearance-none rounded-xl border border-neutral-warm/20 bg-surface/50 px-3 py-2.5 pr-10 text-sm font-medium text-primary-dark placeholder-neutral-warm/50 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-blue-500 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20"
                 :class="{
                     'border-red-500 focus:border-red-500 focus:ring-red-500/20 dark:border-rose-500 dark:focus:border-rose-500':
                         error,

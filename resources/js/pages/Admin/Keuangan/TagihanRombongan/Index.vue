@@ -610,7 +610,7 @@ const executeDelete = () => {
                                 :class="[
                                     activeCabangId === c.id
                                         ? 'border-primary bg-primary text-white shadow-lg ring-2 shadow-primary/20 ring-primary/30 dark:bg-primary-dark'
-                                        : 'border-gray-200 bg-white text-gray-800 hover:border-primary/50 hover:bg-primary/5 dark:border-slate-700/80 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800/50',
+                                        : 'border-gray-200 bg-white text-gray-800 hover:border-primary/50 hover:bg-primary/5 dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800/50',
                                 ]"
                             >
                                 <div class="flex items-center gap-3.5">
@@ -950,7 +950,7 @@ const executeDelete = () => {
                 <!-- Trigger Button -->
                 <button
                     @click="isFilterModalOpen = true"
-                    class="group inline-flex h-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-bold text-gray-700 shadow-xs transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    class="group inline-flex h-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs font-bold text-gray-700 shadow-xs transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 >
                     <svg
                         class="h-4 w-4 text-gray-400 transition-colors group-hover:text-primary dark:text-slate-500"
@@ -1435,7 +1435,7 @@ const executeDelete = () => {
                             :class="[
                                 kategoriForm.jenis_rombongan === 'PESAWAT'
                                     ? 'border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-500/20'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
                             ]"
                         >
                             <img
@@ -1452,7 +1452,7 @@ const executeDelete = () => {
                             :class="[
                                 kategoriForm.jenis_rombongan === 'KAPAL'
                                     ? 'border-teal-600 bg-teal-50 text-teal-700 ring-2 ring-teal-500/20'
-                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+                                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
                             ]"
                         >
                             <img

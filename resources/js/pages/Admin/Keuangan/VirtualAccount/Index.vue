@@ -500,7 +500,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                     <div v-if="selectedIds.length > 0" class="flex gap-2">
                         <button
                             @click="handleExportSelected(selectedIds)"
-                            class="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                            class="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
                             <svg
                                 class="mr-1.5 h-4 w-4 text-gray-500 dark:text-slate-400"
@@ -544,7 +544,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                     <!-- Trigger Button -->
                     <button
                         @click="isFilterModalOpen = true"
-                        class="group inline-flex h-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                        class="group inline-flex h-full cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
                         <svg
                             class="h-4 w-4 text-gray-400 transition-colors group-hover:text-primary dark:text-slate-400 dark:text-slate-500 dark:group-hover:text-blue-400"
@@ -815,7 +815,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                         v-model="pendaftarSearchInput"
                         @focus="isDropdownOpen = true"
                         placeholder="Cari NIK, Nama, atau No. Pendaftaran..."
-                        class="relative block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
+                                    class="relative block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
                     />
 
                     <!-- Dropdown Options -->
@@ -824,7 +824,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                             isDropdownOpen &&
                             filteredPendaftarOptions.length > 0
                         "
-                        class="absolute z-50 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                        class="absolute z-50 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800"
                     >
                         <button
                             v-for="p in filteredPendaftarOptions"
@@ -900,7 +900,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                         <div
                             v-for="(item, idx) in vaForm.vas"
                             :key="item.bank_id"
-                            class="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-3.5 transition-all focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-800/50 dark:bg-slate-900 dark:focus-within:border-blue-500"
+                            class="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-3.5 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-800 dark:bg-slate-800/60 dark:focus-within:border-blue-500"
                         >
                             <!-- Top: Logo di Kiri dan Nama/Singkatan Bank di Kanan -->
                             <div
@@ -945,7 +945,7 @@ const handleExportSelected = (selectedIds: string[]) => {
                                     type="text"
                                     v-model="vaForm.vas[idx].nomor_va"
                                     placeholder="Masukkan Nomor VA..."
-                                    class="relative block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
+                                    class="relative block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
                                 />
                             </div>
                         </div>

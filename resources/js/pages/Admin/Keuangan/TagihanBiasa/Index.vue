@@ -697,7 +697,7 @@ const executeDelete = () => {
                         <!-- Normal Standard-Sized Sub Table -->
                         <div
                             v-if="getItemBiayas(row).length > 0"
-                            class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                            class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900"
                         >
                             <table
                                 class="min-w-full divide-y divide-slate-200 dark:divide-slate-800"
@@ -733,7 +733,7 @@ const executeDelete = () => {
                                     </tr>
                                 </thead>
                                 <tbody
-                                    class="divide-y divide-slate-100 bg-white dark:divide-slate-800/60 dark:bg-slate-800 dark:bg-slate-900"
+                                    class="divide-y divide-slate-100 bg-white dark:divide-slate-800/60 dark:bg-slate-900"
                                 >
                                     <tr
                                         v-for="(item, idx) in getItemBiayas(
@@ -868,7 +868,7 @@ const executeDelete = () => {
                         <!-- Empty State for Items -->
                         <div
                             v-else
-                            class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                            class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900"
                         >
                             <p
                                 class="text-sm font-bold text-slate-700 dark:text-slate-200"

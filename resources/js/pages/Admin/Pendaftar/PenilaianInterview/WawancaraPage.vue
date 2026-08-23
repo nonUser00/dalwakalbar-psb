@@ -22,6 +22,7 @@ const props = defineProps<{
     catatanFinal?: string | null;
     activeStep: number;
     currentStep?: number;
+    isAssignedExaminer?: boolean;
     backUrl: string;
 }>();
 
@@ -31,6 +32,9 @@ const isGroupLocked = computed(() => {
         Boolean(props.pendaftar?.hasil_ujian?.locked_at || props.pendaftar?.hasilUjian?.locked_at)
     );
 });
+
+const isAssigned = computed(() => props.isAssignedExaminer !== false);
+const canEdit = computed(() => isAssigned.value && !isGroupLocked.value);
 
 const steps = [
     { id: 1, title: 'A. Motivasi & Kesiapan', shortTitle: 'Motivasi' },
@@ -194,6 +198,14 @@ const goToStep = (stepIndex: number) => {
         return;
     }
 
+    if (!canEdit.value) {
+        activeStep.value = stepIndex;
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 150, behavior: 'smooth' });
+        }
+        return;
+    }
+
     if (!validateStep(activeStep.value)) {
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 150, behavior: 'smooth' });
@@ -220,7 +232,7 @@ const goToStep = (stepIndex: number) => {
 
 const nextStep = () => {
     if (activeStep.value < steps.length) {
-        if (isGroupLocked.value) {
+        if (!canEdit.value) {
             activeStep.value++;
             if (typeof window !== 'undefined') {
                 window.scrollTo({ top: 150, behavior: 'smooth' });
@@ -243,7 +255,7 @@ const prevStep = () => {
 };
 
 const saveAndFinish = () => {
-    if (isGroupLocked.value) {
+    if (!canEdit.value) {
         router.visit(props.backUrl);
         return;
     }
@@ -828,6 +840,24 @@ const getJenjangLogo = (jenjangOrCode?: any) => {
                                     <p class="font-black text-sm text-amber-950 dark:text-amber-200">Mode Pratinjau (Hasil Wawancara & Ujian Telah Dikunci)</p>
                                     <p class="mt-0.5 text-[11px] font-medium text-amber-800/90 dark:text-amber-300/90">
                                         Hasil wawancara calon santri ini telah dikunci. Data formulir ditampilkan dalam mode pratinjau (hanya lihat).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- BANNER MODE LIHAT SAJA (BUKAN PENGUJI YANG DITUGASKAN) -->
+                            <div
+                                v-else-if="!isAssigned"
+                                class="mb-6 flex items-center gap-3.5 rounded-2xl border border-sky-200 bg-sky-50/90 p-4 text-xs font-bold text-sky-900 shadow-2xs dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300"
+                            >
+                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-400">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-black text-sm text-sky-950 dark:text-sky-200">Mode Lihat Saja (Bukan Petugas Pewawancara)</p>
+                                    <p class="mt-0.5 text-[11px] font-medium text-sky-800/90 dark:text-sky-300/90">
+                                        Anda sedang melihat formulir wawancara ini sebagai peninjau. Pengisian dan penyimpanan formulir hanya dapat dilakukan oleh pegawai yang ditugaskan sebagai pewawancara pada kelompok ini.
                                     </p>
                                 </div>
                             </div>
@@ -1518,7 +1548,7 @@ const getJenjangLogo = (jenjangOrCode?: any) => {
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <span v-if="isGroupLocked">{{ activeStep === steps.length ? 'Kembali ke Kelompok' : 'Langkah Berikutnya' }}</span>
+                                            <span v-if="!canEdit">{{ activeStep === steps.length ? 'Kembali ke Kelompok' : 'Langkah Berikutnya' }}</span>
                                             <span v-else>{{ activeStep === steps.length ? 'Simpan & Selesai' : 'Simpan & Lanjutkan' }}</span>
                                             <svg v-if="activeStep < steps.length && !form.processing" class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

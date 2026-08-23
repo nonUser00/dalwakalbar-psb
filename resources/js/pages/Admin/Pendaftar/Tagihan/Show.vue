@@ -11,6 +11,7 @@ import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { getBankLogo, handleBankLogoError } from '@/lib/bank';
+import { formatWaUrl } from '@/lib/utils';
 import {
     verify_payment,
     delete_payment,
@@ -930,7 +931,7 @@ const submitDeleteBulkPayment = () => {
                                     props.pendaftar.nomor_hp ||
                                     props.pendaftar.personal_data?.nomor_hp
                                 "
-                                :href="`https://wa.me/${(props.pendaftar.nomor_hp || props.pendaftar.personal_data?.nomor_hp).replace(/[^0-9]/g, '').replace(/^0/, '62')}`"
+                                :href="formatWaUrl(props.pendaftar.nomor_hp || props.pendaftar.personal_data?.nomor_hp)"
                                 target="_blank"
                                 class="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                             >

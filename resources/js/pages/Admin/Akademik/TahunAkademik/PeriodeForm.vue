@@ -324,17 +324,19 @@ const submitForm = () => {
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <TextInput
                             id="start_date"
-                            label="Tanggal Buka Pendaftaran"
+                            label="Tanggal Buka Pendaftaran *"
                             type="date"
                             v-model="form.start_date"
                             :error="form.errors.start_date"
+                            required
                         />
                         <TextInput
                             id="end_date"
-                            label="Tanggal Tutup Pendaftaran"
+                            label="Tanggal Tutup Pendaftaran *"
                             type="date"
                             v-model="form.end_date"
                             :error="form.errors.end_date"
+                            required
                         />
                     </div>
                 </div>

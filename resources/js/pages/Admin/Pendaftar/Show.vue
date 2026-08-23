@@ -7,7 +7,9 @@ import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { getBankLogo } from '@/lib/bank';
+import { getBankLogo, handleBankLogoError } from '@/lib/bank';
+import { formatWaUrl } from '@/lib/utils';
+import { store as storeVaRoute } from '@/routes/admin/keuangan/va';
 import { reset_password as resetPasswordRoute } from '@/routes/admin/pendaftar';
 import { index as draftIndex } from '@/routes/admin/pendaftar/draft';
 import { verify as verifyRoute } from '@/routes/admin/pendaftar/submit';
@@ -18,6 +20,7 @@ defineOptions({ layout: AdminLayout });
 const props = defineProps<{
     pendaftar: any;
     masterDokumens?: any[];
+    banks?: any[];
 }>();
 
 // Tab state with URL query parameter sync so refresh keeps active tab
@@ -252,6 +255,59 @@ const copyToClipboard = (text: string, id: string) => {
             }
         }, 2000);
     }
+};
+
+// Virtual Account Modal State & Handlers
+const isVAModalOpen = ref(false);
+const modalVAMode = computed<'add' | 'edit'>(() => {
+    return activeVirtualAccounts.value.length > 0 ? 'edit' : 'add';
+});
+
+const vaForm = useForm({
+    pendaftar_id: '',
+    vas: [] as { bank_id: string; nomor_va: string }[],
+});
+
+const openVAModal = () => {
+    vaForm.reset();
+    vaForm.clearErrors();
+    vaForm.pendaftar_id = props.pendaftar.id;
+
+    const currentVas =
+        props.pendaftar?.virtualAccounts ||
+        props.pendaftar?.virtual_accounts ||
+        [];
+
+    const banksList =
+        props.banks && props.banks.length > 0
+            ? props.banks
+            : currentVas.map((v: any) => v.bank).filter(Boolean);
+
+    vaForm.vas = banksList.map((bank: any) => {
+        const found = currentVas.find((v: any) => v.bank_id === bank.id);
+        return {
+            bank_id: bank.id,
+            nomor_va: found ? (found.nomor_va || found.va_number || '') : '',
+        };
+    });
+
+    isVAModalOpen.value = true;
+};
+
+const closeVAModal = () => {
+    isVAModalOpen.value = false;
+    vaForm.reset();
+    vaForm.clearErrors();
+};
+
+const submitVA = () => {
+    vaForm.post(storeVaRoute.url(), {
+        onSuccess: () => {
+            closeVAModal();
+        },
+        preserveScroll: true,
+        preserveState: true,
+    });
 };
 
 // Document Preview Modal State & Helpers
@@ -762,7 +818,7 @@ const getEducationSubText = (row: any) => {
                                 props.pendaftar.nomor_hp ||
                                 props.pendaftar.personal_data?.nomor_hp
                             "
-                            :href="`https://wa.me/${(props.pendaftar.nomor_hp || props.pendaftar.personal_data?.nomor_hp).replace(/[^0-9]/g, '').replace(/^0/, '62')}`"
+                            :href="formatWaUrl(props.pendaftar.nomor_hp || props.pendaftar.personal_data?.nomor_hp)"
                             target="_blank"
                             class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-emerald-400 hover:bg-emerald-600 hover:text-white hover:shadow-emerald-500/30 hover:shadow-lg dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-emerald-400 dark:hover:border-emerald-500 dark:hover:bg-emerald-600 dark:hover:text-white"
                             title="Hubungi via WhatsApp"
@@ -2504,7 +2560,11 @@ const getEducationSubText = (row: any) => {
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    Nomor Induk Siswa Nasional (NISN)
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'Nomor Induk Mahasiswa (NIM / NPM)'
+                                            : 'Nomor Induk Siswa Nasional (NISN)'
+                                    }}
                                 </p>
                                 <p
                                     class="font-mono text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2556,12 +2616,49 @@ const getEducationSubText = (row: any) => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.education_data?.fakultas_sebelumnya || props.pendaftar.education_data?.fakultas_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.fakultas"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    Tingkat / Kelas Terakhir Sebelumnya
+                                    Fakultas Sebelumnya
+                                </p>
+                                <p
+                                    class="text-sm font-semibold text-gray-900 dark:text-slate-100"
+                                >
+                                    {{ props.pendaftar.education_data?.fakultas_sebelumnya || props.pendaftar.education_data?.fakultas_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.fakultas }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="props.pendaftar.education_data?.prodi_sebelumnya || props.pendaftar.education_data?.prodi_asal || props.pendaftar.education_data?.jurusan_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.prodi"
+                                class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                            >
+                                <p
+                                    class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
+                                >
+                                    Program Studi Sebelumnya
+                                </p>
+                                <p
+                                    class="text-sm font-semibold text-gray-900 dark:text-slate-100"
+                                >
+                                    {{ props.pendaftar.education_data?.prodi_sebelumnya || props.pendaftar.education_data?.prodi_asal || props.pendaftar.education_data?.jurusan_sekolah_asal || props.pendaftar.education_data?.pendidikan_sebelumnya?.prodi }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Pindahan' || props.pendaftar.education_data?.tingkat_sebelumnya || props.pendaftar.education_data?.pendidikan_sebelumnya?.tingkat"
+                                class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                            >
+                                <p
+                                    class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
+                                >
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'Semester / Tingkat Terakhir Sebelumnya'
+                                            : 'Tingkat / Kelas Terakhir Sebelumnya'
+                                    }}
                                 </p>
                                 <p
                                     class="text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2580,7 +2677,13 @@ const getEducationSubText = (row: any) => {
                                 <p
                                     class="mb-1.5 text-xs font-bold tracking-wider text-gray-400 uppercase dark:text-slate-500"
                                 >
-                                    NPSN / NSM Sekolah Asal
+                                    {{
+                                        (props.pendaftar.education_data?.tipe_sekolah_asal === 'Perguruan Tinggi' || props.pendaftar.education_data?.pendidikan_sebelumnya?.tipe === 'Perguruan Tinggi')
+                                            ? 'NPSN / Kode Perguruan Tinggi'
+                                            : (props.pendaftar.education_data?.tipe_sekolah_asal === 'Madrasah' || props.pendaftar.education_data?.nsm_sekolah_asal)
+                                              ? 'NPSN / NSM Madrasah'
+                                              : 'NPSN Sekolah'
+                                    }}
                                 </p>
                                 <p
                                     class="font-mono text-sm font-semibold text-gray-900 dark:text-slate-100"
@@ -2605,6 +2708,7 @@ const getEducationSubText = (row: any) => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Reguler' || props.pendaftar.education_data?.no_ijazah"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
@@ -2624,6 +2728,7 @@ const getEducationSubText = (row: any) => {
                             </div>
 
                             <div
+                                v-if="props.pendaftar.tipe_pendaftaran === 'Reguler' || props.pendaftar.education_data?.tahun_lulus"
                                 class="rounded-2xl border border-gray-100 bg-gray-50/80 p-4 dark:border-slate-800 dark:bg-slate-800/50"
                             >
                                 <p
@@ -2947,12 +3052,28 @@ const getEducationSubText = (row: any) => {
                                 </div>
                             </div>
 
-                            <span
-                                class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-300"
-                            >
-                                <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
-                                {{ activeVirtualAccounts.length }} Channel Bank Aktif
-                            </span>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <span
+                                    class="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-300"
+                                >
+                                    <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+                                    {{ activeVirtualAccounts.length }} Channel Bank Aktif
+                                </span>
+
+                                <button
+                                    type="button"
+                                    @click="openVAModal"
+                                    class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary/90 hover:shadow"
+                                >
+                                    <svg v-if="activeVirtualAccounts.length > 0" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    <span>{{ activeVirtualAccounts.length > 0 ? 'Edit Virtual Account' : 'Tambah Virtual Account' }}</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Empty State -->
@@ -2978,6 +3099,16 @@ const getEducationSubText = (row: any) => {
                             <p class="mt-1 text-xs text-gray-500 max-w-sm dark:text-slate-400">
                                 Belum ada nomor Virtual Account aktif yang diterbitkan untuk pendaftar ini.
                             </p>
+                            <button
+                                type="button"
+                                @click="openVAModal"
+                                class="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-primary/90 hover:shadow"
+                            >
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span>Tambah Virtual Account</span>
+                            </button>
                         </div>
 
                         <!-- Centered Virtual Account Cards -->
@@ -3917,6 +4048,155 @@ const getEducationSubText = (row: any) => {
                     >
                         {{ verifyForm.processing ? 'Menyimpan Catatan...' : 'Kirim Catatan & Minta Perbaikan' }}
                     </button>
+                </div>
+            </template>
+        </Modal>
+
+        <!-- Modal Tambah / Edit Virtual Account (Matching /admin/keuangan/va Modal Style) -->
+        <Modal
+            :show="isVAModalOpen"
+            @close="closeVAModal"
+            maxWidth="xl"
+            :title="
+                modalVAMode === 'add'
+                    ? 'Tambah Virtual Account'
+                    : 'Edit Virtual Account'
+            "
+            :description="
+                modalVAMode === 'add'
+                    ? 'Konfigurasi nomor Virtual Account baru untuk pendaftar'
+                    : 'Perbarui nomor Virtual Account santri'
+            "
+        >
+            <template #icon>
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400"
+                >
+                    <svg
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                    </svg>
+                </div>
+            </template>
+
+            <!-- Selected Pendaftar Info Box -->
+            <div
+                class="mb-5 rounded-xl border border-gray-100 bg-gray-50 p-4 text-center dark:border-slate-800 dark:bg-slate-800"
+            >
+                <p class="mb-1 text-xs text-gray-500 dark:text-slate-400">
+                    Santri / Pendaftar:
+                </p>
+                <p
+                    class="text-base font-bold text-gray-900 dark:text-slate-100"
+                >
+                    {{ props.pendaftar.nama }}
+                </p>
+                <p
+                    class="mt-1 font-mono text-xs text-gray-500 dark:text-slate-400"
+                >
+                    NIK: {{ props.pendaftar.nik || '-' }}
+                    <span v-if="props.pendaftar.cabang?.name || props.pendaftar.cabang?.singkatan || props.pendaftar.personal_data?.cabang_pendaftaran">
+                        | Cabang: {{ props.pendaftar.cabang?.name || props.pendaftar.cabang?.singkatan || props.pendaftar.personal_data?.cabang_pendaftaran }}
+                    </span>
+                    <span v-if="props.pendaftar.jenjang?.name || props.pendaftar.jenjang?.code || props.pendaftar.jenjang?.singkatan || props.pendaftar.education_data?.jenjang">
+                        | Jenjang: {{ props.pendaftar.jenjang?.name || props.pendaftar.jenjang?.code || props.pendaftar.jenjang?.singkatan || props.pendaftar.education_data?.jenjang }}
+                    </span>
+                </p>
+            </div>
+
+            <!-- Bank VA Cards List (Logo & Nama Bank di atas, Input VA di bawahnya) -->
+            <form @submit.prevent="submitVA" class="space-y-4">
+                <div>
+                    <label
+                        class="mb-2.5 block text-xs font-bold tracking-wider text-gray-500 uppercase dark:text-slate-400"
+                    >
+                        Nomor Virtual Account Per Bank
+                    </label>
+                    <div
+                        v-if="vaForm.vas.length === 0"
+                        class="rounded-xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400 dark:border-slate-700 dark:text-slate-500"
+                    >
+                        Tidak ada channel bank aktif yang tersedia.
+                    </div>
+                    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div
+                            v-for="(item, idx) in vaForm.vas"
+                            :key="item.bank_id"
+                            class="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-3.5 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-800 dark:bg-slate-800/60 dark:focus-within:border-blue-500"
+                        >
+                            <!-- Top: Logo di Kiri dan Nama/Singkatan Bank di Kanan -->
+                            <div
+                                class="flex items-center justify-between gap-2"
+                            >
+                                <img
+                                    :src="
+                                        getBankLogo(
+                                            (props.banks || []).find(
+                                                (b) => b.id === item.bank_id,
+                                            ) || { name: '', id: item.bank_id },
+                                        )
+                                    "
+                                    @error="handleBankLogoError($event)"
+                                    :alt="
+                                        (props.banks || []).find(
+                                            (b) => b.id === item.bank_id,
+                                        )?.singkatan ||
+                                        (props.banks || []).find(
+                                            (b) => b.id === item.bank_id,
+                                        )?.name
+                                    "
+                                    class="h-6 w-auto max-w-[60px] object-contain"
+                                />
+                                <span
+                                    class="text-sm font-bold text-gray-900 dark:text-slate-100"
+                                >
+                                    {{
+                                        (props.banks || []).find(
+                                            (b) => b.id === item.bank_id,
+                                        )?.singkatan ||
+                                        (props.banks || []).find(
+                                            (b) => b.id === item.bank_id,
+                                        )?.name
+                                    }}
+                                </span>
+                            </div>
+
+                            <!-- Bottom: Inputan Konsisten di Bawahnya -->
+                            <div>
+                                <input
+                                    type="text"
+                                    v-model="vaForm.vas[idx].nomor_va"
+                                    placeholder="Masukkan Nomor VA..."
+                                    class="relative block w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-400 transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <template #footer>
+                <div class="flex w-full items-center justify-end gap-2">
+                    <SecondaryButton @click="closeVAModal" type="button">
+                        Batal
+                    </SecondaryButton>
+                    <PrimaryButton
+                        @click="submitVA"
+                        :disabled="vaForm.processing"
+                        :class="{ 'opacity-25': vaForm.processing }"
+                        type="button"
+                    >
+                        Simpan Virtual Account
+                    </PrimaryButton>
                 </div>
             </template>
         </Modal>

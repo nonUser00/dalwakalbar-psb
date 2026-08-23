@@ -20,6 +20,7 @@ import {
     bulkDelete,
     resetPassword,
     updateRole,
+    updatePermissionData,
     toggleStatus,
     importPage,
     exportTemplate,
@@ -265,7 +266,7 @@ const toggleAllJenjangPermission = () => {
 };
 
 const submitDataPermission = () => {
-    dataPermissionForm.post(`/admin/pengaturan/pegawai/${selectedPegawai.value.id}/permission-data`, {
+    dataPermissionForm.post(updatePermissionData.url(selectedPegawai.value.id), {
         onSuccess: () => {
             dataPermissionModal.value = false;
         },
@@ -832,12 +833,6 @@ const getDetailUrl = (id: string, isEdit = false) => {
                                     Akses
                                 </button>
                                 <button
-                                    v-if="
-                                        !row.roles?.some(
-                                            (r: any) =>
-                                                r.name === 'Super Admin',
-                                        )
-                                    "
                                     @click="openDataPermissionModal(row)"
                                     class="flex w-full items-center px-3 py-2.5 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:px-4 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
                                 >
@@ -1040,13 +1035,13 @@ const getDetailUrl = (id: string, isEdit = false) => {
         <Modal
             :show="dataPermissionModal"
             @close="dataPermissionModal = false"
-            maxWidth="xl"
+            maxWidth="2xl"
             title="Izin Manajemen Data"
-            description="Batasi akses data pendaftar yang dapat dilihat & dikelola oleh staf ini."
+            description="Konfigurasi batasan cakupan data pendaftar (Gender, Cabang, dan Jenjang) yang dapat diakses oleh staf ini."
         >
             <template #icon>
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400"
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-400"
                 >
                     <svg
                         class="h-6 w-6"
@@ -1058,134 +1053,573 @@ const getDetailUrl = (id: string, isEdit = false) => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                         />
                     </svg>
                 </div>
             </template>
 
+            <!-- Pegawai Profile Card Header -->
             <div
-                class="mb-5 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+                class="mb-6 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-slate-50/50 p-4 shadow-xs dark:border-slate-800 dark:from-slate-800/80 dark:via-slate-900 dark:to-slate-800/50"
             >
-                <p class="text-xs text-gray-500 dark:text-slate-400">
-                    Pegawai: <strong class="text-gray-900 dark:text-slate-100">{{ selectedPegawai?.name }}</strong>
-                    <span v-if="selectedPegawai?.nik"> • NIK: {{ selectedPegawai.nik }}</span>
-                </p>
+                <div class="flex items-center gap-3.5">
+                    <div
+                        class="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-800"
+                    >
+                        <img
+                            v-if="selectedPegawai?.foto"
+                            :src="`/storage/${selectedPegawai.foto}`"
+                            class="h-full w-full object-cover"
+                            alt="Foto"
+                        />
+                        <img
+                            v-else
+                            :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(selectedPegawai?.name || 'User')}&background=273b5e&color=fff&size=128`"
+                            class="h-full w-full object-cover"
+                            alt="Avatar"
+                        />
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h4
+                                class="truncate text-sm font-black text-slate-800 dark:text-slate-100"
+                            >
+                                {{ selectedPegawai?.name }}
+                            </h4>
+                            <span
+                                v-if="selectedPegawai?.roles?.[0]?.name"
+                                class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                            >
+                                {{ selectedPegawai.roles[0].name }}
+                            </span>
+                        </div>
+                        <p
+                            class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400"
+                        >
+                            {{ selectedPegawai?.email }}
+                            <span
+                                v-if="selectedPegawai?.nip || selectedPegawai?.nik"
+                            >
+                                • NIP/NIK: {{ selectedPegawai.nip || selectedPegawai.nik }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <form @submit.prevent="submitDataPermission" class="space-y-6">
                 <!-- 1. Filter Gender Pendaftar -->
-                <div>
-                    <label class="mb-2 block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
-                        1. Izin Berdasarkan Jenis Kelamin Santri
-                    </label>
-                    <div class="grid grid-cols-3 gap-2.5">
+                <div
+                    class="rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <div class="mb-3.5 flex items-center gap-2">
+                        <span
+                            class="flex h-5 w-5 items-center justify-center rounded-md bg-primary text-[11px] font-black text-white dark:bg-blue-600"
+                        >
+                            1
+                        </span>
+                        <div>
+                            <h5
+                                class="text-xs font-black tracking-wider text-slate-800 uppercase dark:text-slate-200"
+                            >
+                                Batasan Jenis Kelamin Santri
+                            </h5>
+                            <p
+                                class="text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                            >
+                                Tentukan akses data santri berdasarkan jenis kelamin.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                        <!-- All Gender -->
                         <button
                             type="button"
                             @click="dataPermissionForm.allowed_gender = 'ALL'"
-                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            class="relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-left transition-all"
                             :class="
                                 dataPermissionForm.allowed_gender === 'ALL' || !dataPermissionForm.allowed_gender
-                                    ? 'border-primary/50 bg-primary/10 text-primary dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300 shadow-2xs'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                                    ? 'border-primary/60 bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-500/20'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                             "
                         >
-                            <span>Semua Gender</span>
+                            <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                :class="
+                                    dataPermissionForm.allowed_gender === 'ALL' || !dataPermissionForm.allowed_gender
+                                        ? 'bg-primary text-white shadow-xs dark:bg-blue-600'
+                                        : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                "
+                            >
+                                <svg
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-black">Semua Gender</p>
+                                <p
+                                    class="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    Akses Putra & Putri
+                                </p>
+                            </div>
+                            <span
+                                v-if="dataPermissionForm.allowed_gender === 'ALL' || !dataPermissionForm.allowed_gender"
+                                class="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white dark:bg-blue-600"
+                            >
+                                <svg
+                                    class="h-2.5 w-2.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </span>
                         </button>
+
+                        <!-- Male Only -->
                         <button
                             type="button"
                             @click="dataPermissionForm.allowed_gender = 'Laki-Laki'"
-                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            class="relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-left transition-all"
                             :class="
                                 dataPermissionForm.allowed_gender === 'Laki-Laki'
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                                    ? 'border-blue-500 bg-blue-50/70 text-blue-700 ring-2 ring-blue-500/20 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-200 dark:ring-blue-500/20'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                             "
                         >
-                            <span>Hanya Laki-Laki</span>
+                            <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                :class="
+                                    dataPermissionForm.allowed_gender === 'Laki-Laki'
+                                        ? 'bg-blue-600 text-white shadow-xs'
+                                        : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                "
+                            >
+                                <svg
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-black">Khusus Putra</p>
+                                <p
+                                    class="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    Santri Laki-Laki
+                                </p>
+                            </div>
+                            <span
+                                v-if="dataPermissionForm.allowed_gender === 'Laki-Laki'"
+                                class="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white"
+                            >
+                                <svg
+                                    class="h-2.5 w-2.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </span>
                         </button>
+
+                        <!-- Female Only -->
                         <button
                             type="button"
                             @click="dataPermissionForm.allowed_gender = 'Perempuan'"
-                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            class="relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 text-left transition-all"
                             :class="
                                 dataPermissionForm.allowed_gender === 'Perempuan'
-                                    ? 'border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-500 dark:bg-rose-950/60 dark:text-rose-300 shadow-2xs'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                                    ? 'border-rose-500 bg-rose-50/70 text-rose-700 ring-2 ring-rose-500/20 shadow-xs dark:border-rose-500 dark:bg-rose-950/50 dark:text-rose-200 dark:ring-rose-500/20'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                             "
                         >
-                            <span>Hanya Perempuan</span>
+                            <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                :class="
+                                    dataPermissionForm.allowed_gender === 'Perempuan'
+                                        ? 'bg-rose-600 text-white shadow-xs'
+                                        : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                "
+                            >
+                                <svg
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-black">Khusus Putri</p>
+                                <p
+                                    class="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    Santri Perempuan
+                                </p>
+                            </div>
+                            <span
+                                v-if="dataPermissionForm.allowed_gender === 'Perempuan'"
+                                class="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-white"
+                            >
+                                <svg
+                                    class="h-2.5 w-2.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </span>
                         </button>
                     </div>
                 </div>
 
                 <!-- 2. Filter Cabang Pendaftar -->
-                <div>
-                    <div class="mb-2 flex items-center justify-between">
-                        <label class="block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
-                            2. Izin Berdasarkan Cabang Pondok
-                        </label>
-                        <button
-                            type="button"
-                            @click="toggleAllCabangPermission"
-                            class="text-xs font-bold text-primary hover:underline dark:text-blue-400"
-                        >
-                            {{ dataPermissionForm.allowed_cabang_ids.length === (props.cabangs || []).length ? 'Hapus Semua' : 'Pilih Semua' }}
-                        </button>
+                <div
+                    class="rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <div class="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="flex h-5 w-5 items-center justify-center rounded-md bg-primary text-[11px] font-black text-white dark:bg-blue-600"
+                            >
+                                2
+                            </span>
+                            <div>
+                                <h5
+                                    class="text-xs font-black tracking-wider text-slate-800 uppercase dark:text-slate-200"
+                                >
+                                    Batasan Cabang Pondok
+                                </h5>
+                                <p
+                                    class="text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    Pilih cabang yang dapat diakses oleh staf.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold"
+                                :class="
+                                    dataPermissionForm.allowed_cabang_ids.length === 0
+                                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                                        : 'bg-primary/10 text-primary dark:bg-blue-950/50 dark:text-blue-300 border border-primary/20 dark:border-blue-800'
+                                "
+                            >
+                                {{
+                                    dataPermissionForm.allowed_cabang_ids.length === 0
+                                        ? 'Tidak Ada Cabang (0 Akses)'
+                                        : `${dataPermissionForm.allowed_cabang_ids.length} dari ${(props.cabangs || []).length} Dipilih`
+                                }}
+                            </span>
+                            <button
+                                type="button"
+                                @click="toggleAllCabangPermission"
+                                class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                {{
+                                    dataPermissionForm.allowed_cabang_ids.length === (props.cabangs || []).length
+                                        ? 'Kosongkan'
+                                        : 'Pilih Semua'
+                                }}
+                            </button>
+                        </div>
                     </div>
-                    <p class="mb-2 text-[11px] text-gray-500 dark:text-slate-400">
-                        *Jika tidak ada yang dipilih, maka staf diizinkan mengakses semua cabang.
-                    </p>
-                    <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                        <label
+
+                    <div
+                        v-if="(props.cabangs || []).length > 0"
+                        class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        <div
                             v-for="cab in (props.cabangs || [])"
                             :key="cab.id"
-                            @click.prevent="toggleCabangPermission(cab.id)"
-                            class="flex cursor-pointer items-center space-x-2.5 rounded-xl border p-2.5 transition-all select-none text-xs font-bold"
+                            @click="toggleCabangPermission(cab.id)"
+                            class="group flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all select-none"
                             :class="
                                 dataPermissionForm.allowed_cabang_ids.includes(cab.id)
-                                    ? 'border-primary/50 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                                    ? 'border-primary/60 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800'
                             "
                         >
-                            <Checkbox :checked="dataPermissionForm.allowed_cabang_ids.includes(cab.id)" @update:checked="() => toggleCabangPermission(cab.id)" />
-                            <span class="truncate">{{ cab.name }}</span>
-                        </label>
+                            <div class="flex min-w-0 items-center gap-2.5">
+                                <div
+                                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs"
+                                    :class="
+                                        dataPermissionForm.allowed_cabang_ids.includes(cab.id)
+                                            ? 'bg-primary/10 text-primary dark:bg-blue-900/50 dark:text-blue-300'
+                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                    "
+                                >
+                                    <svg
+                                        class="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-xs font-bold">
+                                        {{ cab.name }}
+                                    </p>
+                                    <span
+                                        v-if="cab.singkatan"
+                                        class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase"
+                                    >
+                                        {{ cab.singkatan }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all"
+                                :class="
+                                    dataPermissionForm.allowed_cabang_ids.includes(cab.id)
+                                        ? 'border-primary bg-primary text-white dark:border-blue-500 dark:bg-blue-600'
+                                        : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800'
+                                "
+                            >
+                                <svg
+                                    v-if="dataPermissionForm.allowed_cabang_ids.includes(cab.id)"
+                                    class="h-3 w-3"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        v-else
+                        class="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                    >
+                        Belum ada data master cabang.
                     </div>
                 </div>
 
                 <!-- 3. Filter Jenjang Pendaftar -->
-                <div>
-                    <div class="mb-2 flex items-center justify-between">
-                        <label class="block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
-                            3. Izin Berdasarkan Jenjang Pendidikan
-                        </label>
-                        <button
-                            type="button"
-                            @click="toggleAllJenjangPermission"
-                            class="text-xs font-bold text-primary hover:underline dark:text-blue-400"
-                        >
-                            {{ dataPermissionForm.allowed_jenjang_ids.length === (props.jenjangs || []).length ? 'Hapus Semua' : 'Pilih Semua' }}
-                        </button>
+                <div
+                    class="rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <div class="mb-3.5 flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="flex h-5 w-5 items-center justify-center rounded-md bg-primary text-[11px] font-black text-white dark:bg-blue-600"
+                            >
+                                3
+                            </span>
+                            <div>
+                                <h5
+                                    class="text-xs font-black tracking-wider text-slate-800 uppercase dark:text-slate-200"
+                                >
+                                    Batasan Jenjang Pendidikan
+                                </h5>
+                                <p
+                                    class="text-[11px] font-medium text-slate-500 dark:text-slate-400"
+                                >
+                                    Pilih jenjang pendidikan yang diizinkan untuk dikelola.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold"
+                                :class="
+                                    dataPermissionForm.allowed_jenjang_ids.length === 0
+                                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                                        : 'bg-primary/10 text-primary dark:bg-blue-950/50 dark:text-blue-300 border border-primary/20 dark:border-blue-800'
+                                "
+                            >
+                                {{
+                                    dataPermissionForm.allowed_jenjang_ids.length === 0
+                                        ? 'Tidak Ada Jenjang (0 Akses)'
+                                        : `${dataPermissionForm.allowed_jenjang_ids.length} dari ${(props.jenjangs || []).length} Dipilih`
+                                }}
+                            </span>
+                            <button
+                                type="button"
+                                @click="toggleAllJenjangPermission"
+                                class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                            >
+                                {{
+                                    dataPermissionForm.allowed_jenjang_ids.length === (props.jenjangs || []).length
+                                        ? 'Kosongkan'
+                                        : 'Pilih Semua'
+                                }}
+                            </button>
+                        </div>
                     </div>
-                    <p class="mb-2 text-[11px] text-gray-500 dark:text-slate-400">
-                        *Jika tidak ada yang dipilih, maka staf diizinkan mengakses semua jenjang.
-                    </p>
-                    <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                        <label
+
+                    <div
+                        v-if="(props.jenjangs || []).length > 0"
+                        class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        <div
                             v-for="jjg in (props.jenjangs || [])"
                             :key="jjg.id"
-                            @click.prevent="toggleJenjangPermission(jjg.id)"
-                            class="flex cursor-pointer items-center space-x-2.5 rounded-xl border p-2.5 transition-all select-none text-xs font-bold"
+                            @click="toggleJenjangPermission(jjg.id)"
+                            class="group flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all select-none"
                             :class="
                                 dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)
-                                    ? 'border-primary/50 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300'
-                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                                    ? 'border-primary/60 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800'
                             "
                         >
-                            <Checkbox :checked="dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)" @update:checked="() => toggleJenjangPermission(jjg.id)" />
-                            <span class="truncate">{{ jjg.name }}</span>
-                        </label>
+                            <div class="flex min-w-0 items-center gap-2.5">
+                                <div
+                                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs"
+                                    :class="
+                                        dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)
+                                            ? 'bg-primary/10 text-primary dark:bg-blue-900/50 dark:text-blue-300'
+                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                    "
+                                >
+                                    <svg
+                                        class="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 14l9-5-9-5-9 5 9 5z"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-xs font-bold">
+                                        {{ jjg.name }}
+                                    </p>
+                                    <span
+                                        v-if="jjg.code || jjg.singkatan"
+                                        class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase"
+                                    >
+                                        {{ jjg.code || jjg.singkatan }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all"
+                                :class="
+                                    dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)
+                                        ? 'border-primary bg-primary text-white dark:border-blue-500 dark:bg-blue-600'
+                                        : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800'
+                                "
+                            >
+                                <svg
+                                    v-if="dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)"
+                                    class="h-3 w-3"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="3"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        v-else
+                        class="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                    >
+                        Belum ada data master jenjang pendidikan.
+                    </div>
+                </div>
+
+                <!-- Info Hint Banner -->
+                <div
+                    class="flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+                >
+                    <svg
+                        class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                    <div class="text-xs leading-relaxed">
+                        <span class="font-bold">Perhatian Akses Data:</span> Jika tidak ada cabang atau jenjang yang dipilih (kosong), staf tidak memiliki izin untuk melihat atau mengakses data pendaftar pada cabang atau jenjang tersebut. Khusus penguji interview, penugasan kelompok ujian akan otomatis memberikan akses penilaian pada kelompok yang ditugaskan.
                     </div>
                 </div>
             </form>
@@ -1198,8 +1632,23 @@ const getDetailUrl = (id: string, isEdit = false) => {
                     @click="submitDataPermission"
                     :class="{ 'opacity-25': dataPermissionForm.processing }"
                     :disabled="dataPermissionForm.processing"
+                    class="gap-1.5"
                 >
-                    Simpan Izin Data
+                    <svg
+                        v-if="!dataPermissionForm.processing"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                        />
+                    </svg>
+                    <span>Simpan Izin Data</span>
                 </PrimaryButton>
             </template>
         </Modal>

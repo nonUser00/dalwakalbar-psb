@@ -46,6 +46,7 @@ const props = defineProps<{
     kategoriSlug: string;
     pendaftars: any[];
     examiners: UserItem[];
+    isAssignedExaminer?: boolean;
     backUrl: string;
 }>();
 
@@ -55,6 +56,9 @@ const currentUser = computed(() => (page.props.auth as any)?.user);
 const isGroupLocked = computed(() => {
     return (props.kelompok.status || '').toLowerCase() === 'completed';
 });
+
+const isAssigned = computed(() => props.isAssignedExaminer !== false);
+const canEdit = computed(() => isAssigned.value && !isGroupLocked.value);
 
 // Page & Pedoman titles
 const pageTitle = computed(() => {
@@ -576,6 +580,24 @@ const saveNoteFromModal = () => {
             </div>
         </div>
 
+        <!-- Banner Mode Lihat Saja (Bukan Petugas yang Ditugaskan) -->
+        <div
+            v-else-if="!isAssigned"
+            class="flex items-center gap-3.5 rounded-2xl border border-sky-200 bg-sky-50/90 p-4 text-xs font-bold text-sky-900 shadow-2xs dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300"
+        >
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-400">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div>
+                <p class="font-black text-sm text-sky-950 dark:text-sky-200">Mode Lihat Saja (Bukan Penguji yang Ditugaskan)</p>
+                <p class="mt-0.5 text-[11px] font-medium text-sky-800/90 dark:text-sky-300/90">
+                    Anda sedang membuka lembar tes kelompok ini sebagai peninjau. Pengisian dan penyimpanan nilai hanya dapat dilakukan oleh pegawai yang ditugaskan sebagai penguji pada kelompok ini.
+                </p>
+            </div>
+        </div>
+
         <!-- ======================================================= -->
         <!-- 2. MAIN TABLE CARD                                      -->
         <!-- ======================================================= -->
@@ -724,7 +746,7 @@ const saveNoteFromModal = () => {
                                     <input
                                         :value="getRowForm(pendaftar.id).scores[aspek.id]"
                                         @input="handleScoreInput(pendaftar.id, aspek.id, aspek.bobot, $event)"
-                                        :disabled="isGroupLocked"
+                                        :disabled="!canEdit"
                                         type="number"
                                         min="0"
                                         :max="aspek.bobot"
@@ -767,7 +789,7 @@ const saveNoteFromModal = () => {
                             <td class="px-4 py-3.5 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
                                     <button
-                                        v-if="!isGroupLocked"
+                                        v-if="canEdit"
                                         type="button"
                                         @click="saveSingle(pendaftar)"
                                         :disabled="savingRowId === pendaftar.id"
@@ -913,7 +935,7 @@ const saveNoteFromModal = () => {
                     </label>
                     <textarea
                         v-model="tempNote"
-                        :disabled="isGroupLocked"
+                        :disabled="!canEdit"
                         rows="4"
                         placeholder="Contoh: Makharijul huruf sangat fasih, tajwid perlu sedikit ditingkatkan pada hukum ghunnah..."
                         class="w-full rounded-2xl border border-gray-200 bg-white p-3 text-xs text-gray-900 placeholder-gray-400 focus:border-primary focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900 dark:disabled:text-slate-400"
@@ -923,9 +945,9 @@ const saveNoteFromModal = () => {
 
             <template #footer>
                 <SecondaryButton type="button" @click="isNoteModalOpen = false">
-                    {{ isGroupLocked ? 'Tutup' : 'Batal' }}
+                    {{ canEdit ? 'Batal' : 'Tutup' }}
                 </SecondaryButton>
-                <PrimaryButton v-if="!isGroupLocked" type="button" @click="saveNoteFromModal">
+                <PrimaryButton v-if="canEdit" type="button" @click="saveNoteFromModal">
                     Simpan Catatan
                 </PrimaryButton>
             </template>

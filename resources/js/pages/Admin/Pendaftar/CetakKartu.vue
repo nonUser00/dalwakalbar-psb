@@ -126,10 +126,11 @@ const getPilihanJenjangLanjutanText = (pendaftar: any) => {
     const code = (pendaftar.jenjang?.code || '').toUpperCase();
 
     if (code === 'MTS') {
-        const tingkat = edu.kelas_tingkat
-            ? String(edu.kelas_tingkat).toLowerCase().includes('kelas')
-                ? edu.kelas_tingkat
-                : `Kelas ${edu.kelas_tingkat}`
+        const rawTingkat = edu.tingkat_nama || edu.kelas_tingkat || edu.tingkat;
+        const tingkat = rawTingkat
+            ? String(rawTingkat).toLowerCase().includes('kelas')
+                ? rawTingkat
+                : `Kelas ${rawTingkat}`
             : pendaftar.tipe_pendaftaran === 'Pindahan'
               ? 'Pindahan'
               : 'Kelas 7';
@@ -138,20 +139,23 @@ const getPilihanJenjangLanjutanText = (pendaftar: any) => {
     }
 
     if (code === 'MA') {
-        const tingkat = edu.kelas_tingkat
-            ? String(edu.kelas_tingkat).toLowerCase().includes('kelas')
-                ? edu.kelas_tingkat
-                : `Kelas ${edu.kelas_tingkat}`
+        const rawTingkat = edu.tingkat_nama || edu.kelas_tingkat || edu.tingkat;
+        const tingkat = rawTingkat
+            ? String(rawTingkat).toLowerCase().includes('kelas')
+                ? rawTingkat
+                : `Kelas ${rawTingkat}`
             : pendaftar.tipe_pendaftaran === 'Pindahan'
               ? 'Pindahan'
               : 'Kelas 10';
         const jurusan =
-            edu.jurusan_ma || edu.jurusan || 'Ilmu Pengetahuan Alam';
+            edu.jurusan_nama || edu.jurusan_ma || edu.jurusan || '';
 
-        return `${jenjangName} ${tingkat} | ${jurusan}`;
+        return jurusan ? `${jenjangName} ${tingkat} | ${jurusan}` : `${jenjangName} ${tingkat}`;
     }
 
-    const prodiUtama = edu.fakultas_prodi_utama || edu.prodi_utama || edu.prodi;
+    const prodiUtama = edu.fakultas_utama_nama
+        ? `${edu.fakultas_utama_nama} - ${edu.prodi_utama_nama || ''}`
+        : edu.fakultas_prodi_utama || edu.prodi_utama || edu.prodi;
 
     if (prodiUtama) {
         return `${jenjangName} | ${prodiUtama}`;

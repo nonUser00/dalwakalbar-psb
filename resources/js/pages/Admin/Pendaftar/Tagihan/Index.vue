@@ -176,37 +176,45 @@ const getJenjangLogo = (jenjangOrCode?: JenjangItem | string) => {
 const getEducationSubText = (row: any) => {
     const code = (row.jenjang?.code || '').toUpperCase();
     const edu = row.education_data || {};
+    const tipe = row.tipe_pendaftaran ? ` (${row.tipe_pendaftaran})` : '';
 
     if (code === 'MTS') {
-        if (edu.kelas_tingkat) {
-return `Kelas ${edu.kelas_tingkat}`;
-}
+        const rawTingkat = edu.tingkat_nama || edu.kelas_tingkat || edu.tingkat;
+        if (rawTingkat) {
+            return (String(rawTingkat).toLowerCase().includes('kelas') ? rawTingkat : `Kelas ${rawTingkat}`) + tipe;
+        }
 
-        return row.tipe_pendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas VII';
+        return row.tipe_pendaftaran === 'Pindahan' ? 'Pindahan' : `Kelas 7${tipe}`;
     }
 
     if (code === 'MA') {
-        const jurusan = edu.jurusan_ma || edu.jurusan;
+        const jurusan = edu.jurusan_nama || edu.jurusan_ma || edu.jurusan;
+        const rawTingkat = edu.tingkat_nama || edu.kelas_tingkat || edu.tingkat;
 
+        if (jurusan && rawTingkat) {
+            const tk = String(rawTingkat).toLowerCase().includes('kelas') ? rawTingkat : `Kelas ${rawTingkat}`;
+            return `${tk} | ${jurusan}${tipe}`;
+        }
         if (jurusan) {
-return `Jurusan ${jurusan}`;
-}
+            return `Jurusan ${jurusan}${tipe}`;
+        }
+        if (rawTingkat) {
+            return (String(rawTingkat).toLowerCase().includes('kelas') ? rawTingkat : `Kelas ${rawTingkat}`) + tipe;
+        }
 
-        if (edu.kelas_tingkat) {
-return `Kelas ${edu.kelas_tingkat}`;
-}
-
-        return row.tipe_pendaftaran === 'Pindahan' ? 'Pindahan' : 'Kelas X';
+        return row.tipe_pendaftaran === 'Pindahan' ? 'Pindahan' : `Kelas 10${tipe}`;
     }
 
     // S1, S2, S3
-    const prodi = edu.fakultas_prodi_utama || edu.prodi_utama || edu.prodi;
+    const prodi = edu.fakultas_utama_nama
+        ? `${edu.fakultas_utama_nama} - ${edu.prodi_utama_nama || ''}`
+        : (edu.fakultas_prodi_utama || edu.prodi_utama || edu.prodi);
 
     if (prodi) {
-return `Prodi: ${prodi}`;
-}
+        return `Prodi: ${prodi}${tipe}`;
+    }
 
-    return row.tipe_pendaftaran === 'Pindahan' ? 'Pindahan' : 'Reguler';
+    return row.tipe_pendaftaran ? `${row.tipe_pendaftaran}` : 'Reguler';
 };
 
 const getJenjangScopeText = (code?: string) => {

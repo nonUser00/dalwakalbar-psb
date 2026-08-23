@@ -39,9 +39,14 @@ const tabs = [
         tipe: 'Umum',
     },
     {
-        id: 'pondok-pesantren',
-        name: 'Pondok Pesantren',
-        tipe: 'Pondok Pesantren',
+        id: 'madrasah',
+        name: 'Madrasah',
+        tipe: 'Madrasah',
+    },
+    {
+        id: 'perguruan-tinggi',
+        name: 'Perguruan Tinggi',
+        tipe: 'Perguruan Tinggi',
     },
 ];
 
@@ -66,7 +71,8 @@ const columns = [
 
 const tipeOptions = [
     { value: 'Umum', label: 'Umum' },
-    { value: 'Pondok Pesantren', label: 'Pondok Pesantren' },
+    { value: 'Madrasah', label: 'Madrasah' },
+    { value: 'Perguruan Tinggi', label: 'Perguruan Tinggi' },
 ];
 
 const handleSearch = (search: string) => {
@@ -104,7 +110,7 @@ const openAddIndukModal = () => {
     formInduk.reset();
     formInduk.clearErrors();
     formInduk.tipe =
-        activeTab.value === 'pondok-pesantren' ? 'Pondok Pesantren' : 'Umum';
+        tabs.find((t) => t.id === activeTab.value)?.tipe || 'Umum';
     showIndukModal.value = true;
 };
 
@@ -112,8 +118,7 @@ const openEditIndukModal = (item: any) => {
     isEditingInduk.value = true;
     formInduk.id = item.id;
     formInduk.tipe =
-        item.tipe ||
-        (activeTab.value === 'pondok-pesantren' ? 'Pondok Pesantren' : 'Umum');
+        item.tipe || tabs.find((t) => t.id === activeTab.value)?.tipe || 'Umum';
     formInduk.name = item.name;
     formInduk.clearErrors();
     showIndukModal.value = true;

@@ -237,20 +237,20 @@ const getGenderBadge = (allowed: 'L' | 'P' | 'ALL') => {
     if (allowed === 'L') {
         return {
             label: 'Laki-Laki Only',
-            class: 'bg-blue-50 text-blue-700 ring-1 ring-blue-700/10',
+            class: 'bg-blue-50 text-blue-700 ring-1 ring-blue-700/10 dark:bg-blue-950/60 dark:text-blue-400 dark:ring-blue-800/40',
         };
     }
 
     if (allowed === 'P') {
         return {
             label: 'Perempuan Only',
-            class: 'bg-pink-50 text-pink-700 ring-1 ring-pink-700/10',
+            class: 'bg-pink-50 text-pink-700 ring-1 ring-pink-700/10 dark:bg-pink-950/60 dark:text-pink-400 dark:ring-pink-800/40',
         };
     }
 
     return {
         label: 'Laki-Laki & Perempuan',
-        class: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
+        class: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-emerald-800/40',
     };
 };
 
@@ -579,7 +579,7 @@ const executeDelete = () => {
                     >
                         <!-- Drawer Header -->
                         <div
-                            class="dark:bg-slate-800/50/80 flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-800"
+                            class="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-800/80"
                         >
                             <div class="flex items-center gap-3">
                                 <div
@@ -620,7 +620,7 @@ const executeDelete = () => {
                             </div>
                             <button
                                 @click="isJenjangDrawerOpen = false"
-                                class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:bg-slate-800 dark:text-slate-300 dark:text-slate-400 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                             >
                                 <svg
                                     class="h-5 w-5"
@@ -681,7 +681,7 @@ const executeDelete = () => {
                                             :class="
                                                 activeJenjangId === j.id
                                                     ? 'text-white/90'
-                                                    : 'text-gray-700 dark:text-slate-200 dark:text-slate-300'
+                                                    : 'text-gray-700 dark:text-slate-300'
                                             "
                                         >
                                             {{ j.name }}
@@ -691,7 +691,7 @@ const executeDelete = () => {
                                             :class="
                                                 activeJenjangId === j.id
                                                     ? 'text-white/75'
-                                                    : 'text-gray-400 dark:text-slate-400 dark:text-slate-500'
+                                                    : 'text-gray-400 dark:text-slate-400'
                                             "
                                         >
                                             {{ getJenjangScopeText(j.code) }}
@@ -703,7 +703,7 @@ const executeDelete = () => {
                                     :class="
                                         activeJenjangId === j.id
                                             ? 'text-white'
-                                            : 'text-gray-400 dark:text-slate-400 dark:text-slate-500'
+                                            : 'text-gray-400 dark:text-slate-400'
                                     "
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -721,7 +721,7 @@ const executeDelete = () => {
 
                         <!-- Drawer Footer -->
                         <div
-                            class="dark:bg-slate-800/50/50 border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-slate-800 dark:bg-slate-800"
+                            class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-slate-800 dark:bg-slate-800/80"
                         >
                             <span
                                 class="text-[11px] font-medium text-gray-400 dark:text-slate-500"
@@ -777,7 +777,7 @@ const executeDelete = () => {
 
         <!-- Active Jenjang Banner Card (Plain Logo without box card) -->
         <div
-            class="mb-6 flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6 dark:border-slate-700/80 dark:border-slate-800 dark:bg-slate-900"
+            class="mb-6 flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6 dark:border-slate-800 dark:bg-slate-900"
         >
             <div class="flex items-center gap-4 sm:gap-5">
                 <!-- Logo Image without box/card (polosan) -->
@@ -922,7 +922,7 @@ const executeDelete = () => {
                     >
                         <div class="flex items-center gap-3">
                             <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-sky-600"
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-400"
                             >
                                 <svg
                                     class="h-5 w-5"
@@ -954,12 +954,12 @@ const executeDelete = () => {
 
                         <!-- Gender Configuration Widget for Jenjang MTs -->
                         <div
-                            class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700/80"
+                            class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/60"
                         >
                             <div
                                 class="flex items-center justify-between gap-2"
                             >
-                                <span class="text-xs font-bold text-slate-700"
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
                                     >Gender Diizinkan:</span
                                 >
                                 <span
@@ -1046,12 +1046,12 @@ const executeDelete = () => {
                         </div>
 
                         <div
-                            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5"
+                            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-800/60"
                         >
-                            <span class="text-xs font-bold text-slate-700"
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
                                 >Total Tingkat Kelas:</span
                             >
-                            <span class="text-sm font-black text-primary"
+                            <span class="text-sm font-black text-primary dark:text-blue-400"
                                 >{{
                                     activeJenjang.tingkats
                                         ? activeJenjang.tingkats.length
@@ -1111,7 +1111,7 @@ const executeDelete = () => {
                         >
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-lg font-black text-sky-700 transition-colors group-hover:bg-primary group-hover:text-white"
+                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-lg font-black text-sky-700 transition-colors group-hover:bg-primary group-hover:text-white dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-400 dark:group-hover:bg-blue-600"
                                 >
                                     {{
                                         t.name.replace(/[^0-9]/g, '') || idx + 1
@@ -1137,7 +1137,7 @@ const executeDelete = () => {
                             <ActionMenu>
                                 <template #trigger>
                                     <button
-                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-slate-700 dark:border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-transparent dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                                         title="Opsi"
                                     >
                                         <svg
@@ -1158,7 +1158,7 @@ const executeDelete = () => {
                                 <template #content>
                                     <button
                                         @click="openTingkatModal(t)"
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-amber-500"
@@ -1183,7 +1183,7 @@ const executeDelete = () => {
                                                 t.name,
                                             )
                                         "
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-rose-500"
@@ -1338,7 +1338,7 @@ const executeDelete = () => {
                             <ActionMenu>
                                 <template #trigger>
                                     <button
-                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-slate-700 dark:border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-transparent dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                                         title="Opsi"
                                     >
                                         <svg
@@ -1359,7 +1359,7 @@ const executeDelete = () => {
                                 <template #content>
                                     <button
                                         @click="openTingkatModal(t)"
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-amber-500"
@@ -1384,7 +1384,7 @@ const executeDelete = () => {
                                                 t.name,
                                             )
                                         "
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-rose-500"
@@ -1505,7 +1505,7 @@ const executeDelete = () => {
                                     <template #content>
                                         <button
                                             @click="openJurusanModal(j)"
-                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                         >
                                             <svg
                                                 class="mr-2 h-4 w-4 text-amber-500"
@@ -1530,7 +1530,7 @@ const executeDelete = () => {
                                                     j.name,
                                                 )
                                             "
-                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                                         >
                                             <svg
                                                 class="mr-2 h-4 w-4 text-rose-500"
@@ -1700,7 +1700,7 @@ const executeDelete = () => {
                             <ActionMenu>
                                 <template #trigger>
                                     <button
-                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-slate-700 dark:border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                        class="rounded-full border border-transparent p-2 text-gray-500 transition-colors hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 dark:border-transparent dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                                         title="Opsi"
                                     >
                                         <svg
@@ -1721,7 +1721,7 @@ const executeDelete = () => {
                                 <template #content>
                                     <button
                                         @click="openFakultasModal(f)"
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-amber-500"
@@ -1746,7 +1746,7 @@ const executeDelete = () => {
                                                 f.name,
                                             )
                                         "
-                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                                        class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                                     >
                                         <svg
                                             class="mr-2 h-4 w-4 text-rose-500"
@@ -1831,7 +1831,7 @@ const executeDelete = () => {
                             <div class="flex items-start justify-between gap-3">
                                 <div class="flex items-center gap-3">
                                     <span
-                                        class="rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700 transition-colors group-hover:bg-primary group-hover:text-white"
+                                        class="rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700 transition-colors group-hover:bg-primary group-hover:text-white dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400 dark:group-hover:bg-blue-600"
                                     >
                                         {{ p.code || 'PRODI' }}
                                     </span>
@@ -1873,7 +1873,7 @@ const executeDelete = () => {
                                     <template #content>
                                         <button
                                             @click="openProdiModal(p)"
-                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                         >
                                             <svg
                                                 class="mr-2 h-4 w-4 text-amber-500"
@@ -1898,7 +1898,7 @@ const executeDelete = () => {
                                                     p.name,
                                                 )
                                             "
-                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                                            class="flex w-full items-center px-4 py-2.5 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                                         >
                                             <svg
                                                 class="mr-2 h-4 w-4 text-rose-500"
@@ -2342,10 +2342,10 @@ const executeDelete = () => {
         >
             <template #icon>
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50"
+                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/50"
                 >
                     <svg
-                        class="h-6 w-6 text-rose-500"
+                        class="h-6 w-6 text-rose-500 dark:text-rose-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"

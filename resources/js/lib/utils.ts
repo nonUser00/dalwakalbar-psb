@@ -60,3 +60,42 @@ export function formatHariKerja(selectedDays: string[] | undefined | null): stri
 
     return ranges.join(', ');
 }
+
+/**
+ * Format nomor telepon / WhatsApp untuk link wa.me:
+ * - Menghilangkan spasi, tanda minus, plus, dan karakter non-angka
+ * - Jika berawalan '08...' atau '0...', diubah menjadi '628...' / '62...'
+ * - Jika sudah berawalan '628...' atau '62...', tetap dibiarkan '62...'
+ * - Jika berawalan '8...', ditambahkan '62' di depan menjadi '628...'
+ */
+export function formatWaNumber(phone?: string | number | null): string {
+    if (!phone) {
+        return '';
+    }
+
+    let clean = String(phone).replace(/[^0-9]/g, '');
+
+    if (clean.startsWith('0')) {
+        clean = '62' + clean.slice(1);
+    } else if (clean.startsWith('8')) {
+        clean = '62' + clean;
+    }
+
+    return clean;
+}
+
+/**
+ * Membuat tautan WhatsApp lengkap (https://wa.me/...) dengan nomor yang telah diformat standar
+ */
+export function formatWaUrl(phone?: string | number | null, text?: string): string {
+    const num = formatWaNumber(phone);
+    if (!num) {
+        return '#';
+    }
+
+    if (text) {
+        return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+    }
+
+    return `https://wa.me/${num}`;
+}

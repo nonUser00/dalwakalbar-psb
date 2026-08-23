@@ -15,29 +15,63 @@ const props = defineProps<{
 
 defineEmits(['update:modelValue']);
 
-// Normalize options array whether passed as strings ['A', 'B'] or objects [{ value: 'a', label: 'A' }]
+// Normalize options array whether passed as strings ['A', 'B'], objects [{ value: 'a', label: 'A' }], or models [{ id: 'a', name: 'A' }]
 const normalizedOptions = computed(() => {
     if (!props.options || !Array.isArray(props.options)) {
         return [];
     }
 
     return props.options.map((opt) => {
-        if (typeof opt === 'object' && opt !== null && 'value' in opt) {
+        if (typeof opt === 'object' && opt !== null) {
+            const val =
+                'value' in opt
+                    ? opt.value
+                    : 'id' in opt
+                      ? opt.id
+                      : 'code' in opt
+                        ? opt.code
+                        : opt;
+
+            const lbl =
+                'label' in opt
+                    ? opt.label
+                    : 'name' in opt
+                      ? opt.name
+                      : 'nama' in opt
+                        ? opt.nama
+                        : val;
+
             return {
-                value: opt.value,
-                label: 'label' in opt ? opt.label : opt.value,
+                value: val === null || val === undefined ? '' : val,
+                label:
+                    lbl !== undefined && lbl !== null && String(lbl).trim() !== ''
+                        ? lbl
+                        : (props.placeholder || '-- Pilih --'),
             };
         }
 
-        return { value: opt, label: opt };
+        return {
+            value: opt === null || opt === undefined ? '' : opt,
+            label:
+                opt !== null && opt !== undefined && String(opt).trim() !== ''
+                    ? opt
+                    : (props.placeholder || '-- Pilih --'),
+        };
     });
 });
 
 const hasEmptyOption = computed(() => {
     return normalizedOptions.value.some(
-        (opt) =>
-            opt.value === '' || opt.value === null || opt.value === undefined,
+        (opt) => opt.value === '' || opt.value === null || opt.value === undefined,
     );
+});
+
+const isValueInOptions = computed(() => {
+    const val = props.modelValue;
+    if (val === '' || val === null || val === undefined) {
+        return true;
+    }
+    return normalizedOptions.value.some((opt) => String(opt.value) === String(val));
 });
 </script>
 
@@ -57,7 +91,7 @@ const hasEmptyOption = computed(() => {
 
         <div class="relative flex items-center">
             <select
-                :value="modelValue"
+                :value="modelValue === null || modelValue === undefined ? '' : modelValue"
                 @change="
                     $emit(
                         'update:modelValue',
@@ -78,6 +112,13 @@ const hasEmptyOption = computed(() => {
                     class="dark:bg-slate-800 dark:text-slate-200"
                 >
                     {{ placeholder || '-- Pilih --' }}
+                </option>
+                <option
+                    v-if="!isValueInOptions && modelValue !== '' && modelValue !== null && modelValue !== undefined"
+                    :value="modelValue"
+                    class="hidden"
+                >
+                    {{ modelValue }}
                 </option>
                 <option
                     v-for="(opt, idx) in normalizedOptions"

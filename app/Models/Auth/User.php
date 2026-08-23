@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Laravolt\Indonesia\Models\City;
 use Laravolt\Indonesia\Models\District;
 use Laravolt\Indonesia\Models\Province;
@@ -31,6 +32,7 @@ use Laravolt\Indonesia\Models\Village;
     'foto', 'name', 'email', 'password', 'gender', 'tempat_lahir', 'tanggal_lahir',
     'nip', 'nik', 'no_kk', 'no_akta_lahir', 'nomor_hp', 'alamat_lengkap', 'rt', 'rw',
     'kode_pos', 'provinsi', 'kabupaten_kota', 'kecamatan', 'kelurahan_desa', 'is_active',
+    'allowed_gender', 'allowed_cabang_ids', 'allowed_jenjang_ids',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -50,6 +52,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'allowed_cabang_ids' => 'array',
+            'allowed_jenjang_ids' => 'array',
         ];
     }
 
@@ -98,5 +102,49 @@ class User extends Authenticatable
     public function village()
     {
         return $this->belongsTo(Village::class, 'kelurahan_desa', 'code');
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin');
+    }
+
+    /**
+     * Scope query pendaftar berdasarkan izin manajemen data user pegawai.
+     */
+    public function scopeFilterPendaftarByPermissions($query, ?User $user = null)
+    {
+        $user = $user ?? Auth::user();
+
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        // 1. Filter Gender
+        if ($user->allowed_gender && $user->allowed_gender !== 'ALL') {
+            $g = $user->allowed_gender;
+            $query->where(function ($q) use ($g) {
+                if (in_array(strtolower($g), ['l', 'laki-laki', 'laki-laki '])) {
+                    $q->where('personal_data->jenis_kelamin', 'L')
+                        ->orWhere('personal_data->jenis_kelamin', 'Laki-Laki')
+                        ->orWhere('personal_data->jenis_kelamin', 'Laki-laki');
+                } elseif (in_array(strtolower($g), ['p', 'perempuan'])) {
+                    $q->where('personal_data->jenis_kelamin', 'P')
+                        ->orWhere('personal_data->jenis_kelamin', 'Perempuan');
+                }
+            });
+        }
+
+        // 2. Filter Cabang
+        if (! empty($user->allowed_cabang_ids) && is_array($user->allowed_cabang_ids)) {
+            $query->whereIn('cabang_id', $user->allowed_cabang_ids);
+        }
+
+        // 3. Filter Jenjang
+        if (! empty($user->allowed_jenjang_ids) && is_array($user->allowed_jenjang_ids)) {
+            $query->whereIn('jenjang_id', $user->allowed_jenjang_ids);
+        }
+
+        return $query;
     }
 }

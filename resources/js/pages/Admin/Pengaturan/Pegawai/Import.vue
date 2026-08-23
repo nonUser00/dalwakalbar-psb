@@ -596,7 +596,7 @@ const genderOptions = [
                     >
                         <template v-if="!uploadedFile">
                             <div
-                                class="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                                class="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
                             >
                                 <svg
                                     class="h-8 w-8 text-primary dark:text-blue-400"

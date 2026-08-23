@@ -31,6 +31,8 @@ import {
 const props = defineProps<{
     pegawais: any;
     roles: Array<{ id: string; name: string }>;
+    cabangs?: Array<{ id: string; name: string; singkatan?: string }>;
+    jenjangs?: Array<{ id: string; name: string; code?: string; singkatan?: string }>;
     filters: Record<string, string>;
 }>();
 
@@ -47,6 +49,7 @@ const deleteModal = ref(false);
 const bulkDeleteModal = ref(false);
 const resetPasswordModal = ref(false);
 const roleModal = ref(false);
+const dataPermissionModal = ref(false);
 
 const selectedPegawai = ref<any>(null);
 
@@ -57,6 +60,12 @@ const resetForm = useForm({
 
 const roleForm = useForm({
     role: '',
+});
+
+const dataPermissionForm = useForm({
+    allowed_gender: 'ALL',
+    allowed_cabang_ids: [] as string[],
+    allowed_jenjang_ids: [] as string[],
 });
 
 const filterForm = useForm({
@@ -207,6 +216,59 @@ const openRoleModal = (pegawai: any) => {
 const submitRole = () => {
     roleForm.post(updateRole.url(selectedPegawai.value.id), {
         onSuccess: () => (roleModal.value = false),
+    });
+};
+
+const openDataPermissionModal = (pegawai: any) => {
+    selectedPegawai.value = pegawai;
+    dataPermissionForm.clearErrors();
+    dataPermissionForm.allowed_gender = pegawai.allowed_gender || 'ALL';
+    dataPermissionForm.allowed_cabang_ids = Array.isArray(pegawai.allowed_cabang_ids) ? [...pegawai.allowed_cabang_ids] : [];
+    dataPermissionForm.allowed_jenjang_ids = Array.isArray(pegawai.allowed_jenjang_ids) ? [...pegawai.allowed_jenjang_ids] : [];
+    dataPermissionModal.value = true;
+};
+
+const toggleCabangPermission = (cabangId: string) => {
+    const idx = dataPermissionForm.allowed_cabang_ids.indexOf(cabangId);
+    if (idx > -1) {
+        dataPermissionForm.allowed_cabang_ids.splice(idx, 1);
+    } else {
+        dataPermissionForm.allowed_cabang_ids.push(cabangId);
+    }
+};
+
+const toggleAllCabangPermission = () => {
+    const all = (props.cabangs || []).map((c) => c.id);
+    if (dataPermissionForm.allowed_cabang_ids.length === all.length) {
+        dataPermissionForm.allowed_cabang_ids = [];
+    } else {
+        dataPermissionForm.allowed_cabang_ids = [...all];
+    }
+};
+
+const toggleJenjangPermission = (jenjangId: string) => {
+    const idx = dataPermissionForm.allowed_jenjang_ids.indexOf(jenjangId);
+    if (idx > -1) {
+        dataPermissionForm.allowed_jenjang_ids.splice(idx, 1);
+    } else {
+        dataPermissionForm.allowed_jenjang_ids.push(jenjangId);
+    }
+};
+
+const toggleAllJenjangPermission = () => {
+    const all = (props.jenjangs || []).map((j) => j.id);
+    if (dataPermissionForm.allowed_jenjang_ids.length === all.length) {
+        dataPermissionForm.allowed_jenjang_ids = [];
+    } else {
+        dataPermissionForm.allowed_jenjang_ids = [...all];
+    }
+};
+
+const submitDataPermission = () => {
+    dataPermissionForm.post(`/admin/pengaturan/pegawai/${selectedPegawai.value.id}/permission-data`, {
+        onSuccess: () => {
+            dataPermissionModal.value = false;
+        },
     });
 };
 
@@ -407,7 +469,7 @@ const getDetailUrl = (id: string, isEdit = false) => {
                     <div v-if="selectedIds.length > 0" class="flex gap-2">
                         <button
                             @click="handleExportSelected(selectedIds)"
-                            class="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                            class="inline-flex items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
                             <svg
                                 class="mr-1.5 h-4 w-4 text-gray-500 dark:text-slate-400"
@@ -450,7 +512,7 @@ const getDetailUrl = (id: string, isEdit = false) => {
                     <!-- Trigger Button -->
                     <button
                         @click="isFilterModalOpen = true"
-                        class="group inline-flex h-full items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:bg-slate-800"
+                        class="group inline-flex h-full items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:outline-none sm:px-4 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     >
                         <svg
                             class="h-4 w-4 text-gray-400 transition-colors group-hover:text-primary dark:text-slate-400 dark:text-slate-500 dark:group-hover:text-blue-400"
@@ -776,6 +838,31 @@ const getDetailUrl = (id: string, isEdit = false) => {
                                                 r.name === 'Super Admin',
                                         )
                                     "
+                                    @click="openDataPermissionModal(row)"
+                                    class="flex w-full items-center px-3 py-2.5 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:px-4 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
+                                >
+                                    <svg
+                                        class="mr-3 h-4 w-4 text-purple-500 dark:text-purple-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                                        />
+                                    </svg>
+                                    Izin Data
+                                </button>
+                                <button
+                                    v-if="
+                                        !row.roles?.some(
+                                            (r: any) =>
+                                                r.name === 'Super Admin',
+                                        )
+                                    "
                                     @click="openResetPassword(row)"
                                     class="flex w-full items-center px-3 py-2.5 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:px-4 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
                                 >
@@ -945,6 +1032,174 @@ const getDetailUrl = (id: string, isEdit = false) => {
                     :disabled="roleForm.processing"
                 >
                     Simpan Akses
+                </PrimaryButton>
+            </template>
+        </Modal>
+
+        <!-- Modal Izin Manajemen Data -->
+        <Modal
+            :show="dataPermissionModal"
+            @close="dataPermissionModal = false"
+            maxWidth="xl"
+            title="Izin Manajemen Data"
+            description="Batasi akses data pendaftar yang dapat dilihat & dikelola oleh staf ini."
+        >
+            <template #icon>
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400"
+                >
+                    <svg
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
+                    </svg>
+                </div>
+            </template>
+
+            <div
+                class="mb-5 rounded-2xl border border-gray-100 bg-gray-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/50"
+            >
+                <p class="text-xs text-gray-500 dark:text-slate-400">
+                    Pegawai: <strong class="text-gray-900 dark:text-slate-100">{{ selectedPegawai?.name }}</strong>
+                    <span v-if="selectedPegawai?.nik"> • NIK: {{ selectedPegawai.nik }}</span>
+                </p>
+            </div>
+
+            <form @submit.prevent="submitDataPermission" class="space-y-6">
+                <!-- 1. Filter Gender Pendaftar -->
+                <div>
+                    <label class="mb-2 block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
+                        1. Izin Berdasarkan Jenis Kelamin Santri
+                    </label>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button
+                            type="button"
+                            @click="dataPermissionForm.allowed_gender = 'ALL'"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            :class="
+                                dataPermissionForm.allowed_gender === 'ALL' || !dataPermissionForm.allowed_gender
+                                    ? 'border-primary/50 bg-primary/10 text-primary dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300 shadow-2xs'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                            "
+                        >
+                            <span>Semua Gender</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="dataPermissionForm.allowed_gender = 'Laki-Laki'"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            :class="
+                                dataPermissionForm.allowed_gender === 'Laki-Laki'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                            "
+                        >
+                            <span>Hanya Laki-Laki</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="dataPermissionForm.allowed_gender = 'Perempuan'"
+                            class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border p-3 text-xs font-bold transition-all"
+                            :class="
+                                dataPermissionForm.allowed_gender === 'Perempuan'
+                                    ? 'border-rose-500 bg-rose-50 text-rose-700 dark:border-rose-500 dark:bg-rose-950/60 dark:text-rose-300 shadow-2xs'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                            "
+                        >
+                            <span>Hanya Perempuan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Filter Cabang Pendaftar -->
+                <div>
+                    <div class="mb-2 flex items-center justify-between">
+                        <label class="block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
+                            2. Izin Berdasarkan Cabang Pondok
+                        </label>
+                        <button
+                            type="button"
+                            @click="toggleAllCabangPermission"
+                            class="text-xs font-bold text-primary hover:underline dark:text-blue-400"
+                        >
+                            {{ dataPermissionForm.allowed_cabang_ids.length === (props.cabangs || []).length ? 'Hapus Semua' : 'Pilih Semua' }}
+                        </button>
+                    </div>
+                    <p class="mb-2 text-[11px] text-gray-500 dark:text-slate-400">
+                        *Jika tidak ada yang dipilih, maka staf diizinkan mengakses semua cabang.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                        <label
+                            v-for="cab in (props.cabangs || [])"
+                            :key="cab.id"
+                            @click.prevent="toggleCabangPermission(cab.id)"
+                            class="flex cursor-pointer items-center space-x-2.5 rounded-xl border p-2.5 transition-all select-none text-xs font-bold"
+                            :class="
+                                dataPermissionForm.allowed_cabang_ids.includes(cab.id)
+                                    ? 'border-primary/50 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                            "
+                        >
+                            <Checkbox :checked="dataPermissionForm.allowed_cabang_ids.includes(cab.id)" @update:checked="() => toggleCabangPermission(cab.id)" />
+                            <span class="truncate">{{ cab.name }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. Filter Jenjang Pendaftar -->
+                <div>
+                    <div class="mb-2 flex items-center justify-between">
+                        <label class="block text-xs font-black uppercase tracking-wider text-gray-700 dark:text-slate-200">
+                            3. Izin Berdasarkan Jenjang Pendidikan
+                        </label>
+                        <button
+                            type="button"
+                            @click="toggleAllJenjangPermission"
+                            class="text-xs font-bold text-primary hover:underline dark:text-blue-400"
+                        >
+                            {{ dataPermissionForm.allowed_jenjang_ids.length === (props.jenjangs || []).length ? 'Hapus Semua' : 'Pilih Semua' }}
+                        </button>
+                    </div>
+                    <p class="mb-2 text-[11px] text-gray-500 dark:text-slate-400">
+                        *Jika tidak ada yang dipilih, maka staf diizinkan mengakses semua jenjang.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                        <label
+                            v-for="jjg in (props.jenjangs || [])"
+                            :key="jjg.id"
+                            @click.prevent="toggleJenjangPermission(jjg.id)"
+                            class="flex cursor-pointer items-center space-x-2.5 rounded-xl border p-2.5 transition-all select-none text-xs font-bold"
+                            :class="
+                                dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)
+                                    ? 'border-primary/50 bg-primary/5 text-primary dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                            "
+                        >
+                            <Checkbox :checked="dataPermissionForm.allowed_jenjang_ids.includes(jjg.id)" @update:checked="() => toggleJenjangPermission(jjg.id)" />
+                            <span class="truncate">{{ jjg.name }}</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+
+            <template #footer>
+                <SecondaryButton @click="dataPermissionModal = false">
+                    Batal
+                </SecondaryButton>
+                <PrimaryButton
+                    @click="submitDataPermission"
+                    :class="{ 'opacity-25': dataPermissionForm.processing }"
+                    :disabled="dataPermissionForm.processing"
+                >
+                    Simpan Izin Data
                 </PrimaryButton>
             </template>
         </Modal>

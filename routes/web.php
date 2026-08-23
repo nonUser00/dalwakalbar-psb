@@ -337,6 +337,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
             Route::delete('/{pegawai}', [PegawaiController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-delete', [PegawaiController::class, 'bulkDestroy'])->name('bulk-delete');
             Route::post('/{pegawai}/role', [PegawaiController::class, 'updateRole'])->name('update-role');
+            Route::post('/{pegawai}/permission-data', [PegawaiController::class, 'updateDataPermission'])->name('update-permission-data');
             Route::post('/{pegawai}/reset-password', [PegawaiController::class, 'resetPassword'])->name('reset-password');
             Route::post('/{pegawai}/toggle-status', [PegawaiController::class, 'toggleStatus'])->name('toggle-status');
             Route::get('/import-excel', [PegawaiController::class, 'importPage'])->name('import-page');
@@ -397,6 +398,7 @@ Route::middleware('auth:pendaftar')->prefix('psb')->name('psb.')->group(function
     // Formulir Pendaftaran (5 Steps: Personal, Ortu, Alamat, Pendidikan, Dokumen)
     Route::get('/biodata', [BiodataController::class, 'index'])->name('biodata.index');
     Route::post('/biodata', [BiodataController::class, 'update'])->name('biodata.update');
+    Route::post('/biodata/batal-submit', [BiodataController::class, 'batalSubmit'])->name('biodata.batal_submit');
     Route::post('/biodata/upload-dokumen', [BiodataController::class, 'uploadDokumen'])->name('biodata.upload_dokumen');
     Route::post('/biodata/submit-final', [BiodataController::class, 'submitFinal'])->name('biodata.submit_final');
 

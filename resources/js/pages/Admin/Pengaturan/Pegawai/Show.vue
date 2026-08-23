@@ -108,7 +108,7 @@ const backUrl = computed(() => {
                     class="relative z-10 -mt-16 flex flex-grow flex-col items-center px-8 md:items-start"
                 >
                     <div
-                        class="mb-6 h-32 w-32 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl dark:border-slate-800 dark:bg-slate-800 dark:bg-slate-900"
+                        class="mb-6 h-32 w-32 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-xl dark:border-slate-800 dark:bg-slate-800"
                     >
                         <img
                             v-if="pegawai.foto"

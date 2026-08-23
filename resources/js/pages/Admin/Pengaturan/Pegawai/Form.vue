@@ -630,7 +630,7 @@ const genderOptions = [
                                     >RT / RW</label
                                 >
                                 <div
-                                    class="relative flex w-full items-center rounded-xl border border-gray-200 bg-white shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900 dark:focus-within:border-blue-500"
+                                    class="relative flex w-full items-center rounded-xl border border-gray-200 bg-white shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-blue-500"
                                 >
                                     <input
                                         v-model="form.rt"

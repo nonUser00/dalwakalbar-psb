@@ -7,6 +7,8 @@ use App\Exports\PegawaiTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\Role;
 use App\Models\Auth\User;
+use App\Models\Master\Cabang;
+use App\Models\Master\Jenjang;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,10 +54,14 @@ class PegawaiController extends Controller
         $pegawais = $query->paginate($limit)->withQueryString();
 
         $roles = Role::whereNotIn('name', ['Pendaftar'])->get();
+        $cabangs = Cabang::where('is_active', true)->orderBy('name')->get(['id', 'name', 'singkatan']);
+        $jenjangs = Jenjang::where('is_active', true)->orderBy('name')->get(['id', 'name', 'code', 'singkatan']);
 
         return Inertia::render('Admin/Pengaturan/Pegawai/Index', [
             'pegawais' => $pegawais,
             'roles' => $roles,
+            'cabangs' => $cabangs,
+            'jenjangs' => $jenjangs,
             'filters' => $request->only(['search', 'status', 'role', 'gender']),
         ]);
     }
@@ -271,6 +277,33 @@ class PegawaiController extends Controller
         });
 
         return back()->with('success', 'Role pegawai berhasil diatur.');
+    }
+
+    public function updateDataPermission(Request $request, User $pegawai)
+    {
+        $validated = $request->validate([
+            'allowed_gender' => 'nullable|string|in:ALL,Laki-Laki,Perempuan',
+            'allowed_cabang_ids' => 'nullable|array',
+            'allowed_cabang_ids.*' => 'exists:cabangs,id',
+            'allowed_jenjang_ids' => 'nullable|array',
+            'allowed_jenjang_ids.*' => 'exists:jenjangs,id',
+        ]);
+
+        DB::transaction(function () use ($pegawai, $validated) {
+            $pegawai->update([
+                'allowed_gender' => $validated['allowed_gender'] ?? 'ALL',
+                'allowed_cabang_ids' => $validated['allowed_cabang_ids'] ?? [],
+                'allowed_jenjang_ids' => $validated['allowed_jenjang_ids'] ?? [],
+            ]);
+
+            activity()
+                ->performedOn($pegawai)
+                ->causedBy(Auth::user())
+                ->event('updated')
+                ->log("Memperbarui izin manajemen data untuk pegawai: {$pegawai->name}");
+        });
+
+        return back()->with('success', 'Izin manajemen data berhasil diperbarui.');
     }
 
     public function resetPassword(Request $request, User $pegawai)
